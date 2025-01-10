@@ -41,6 +41,7 @@ export default function GallerySection() {
                 alt={`Gallery ${index + 1}`}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                 loading="lazy"
+                unoptimized={true}
               />
             </div>
           ))}
@@ -59,6 +60,7 @@ export default function GallerySection() {
                 alt={`Gallery ${index + 1}`}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                 loading="lazy"
+                unoptimized={true}
               />
             </div>
           ))}
@@ -73,6 +75,7 @@ export default function GallerySection() {
                 alt={`Gallery ${currentImageIndex + 1}`}
                 className="absolute inset-0 w-full h-full object-cover"
                 loading="lazy"
+                unoptimized={true}
               />
             </div>
 

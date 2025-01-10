@@ -154,6 +154,7 @@ export default function CoursesSection() {
                         src={course.image}
                         alt={course.title}
                         className="w-full h-full object-contain"
+                        unoptimized={true}
                       />
                     </div>
 

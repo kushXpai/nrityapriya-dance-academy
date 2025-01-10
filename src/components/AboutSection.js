@@ -15,6 +15,7 @@ export default function AboutSection() {
                 src={TeacherImage}
                 alt="Kathak Dance Performance"
                 className="w-full h-full object-cover"
+                unoptimized={true}
               />
             </div>
           </div>

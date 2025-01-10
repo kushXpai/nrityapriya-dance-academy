@@ -21,6 +21,7 @@ export default function HeroSection() {
         className="object-cover w-full h-full"
         loading="eager"
         priority="true"
+        unoptimized={true}
       />
 
       {/* Responsive content container */}

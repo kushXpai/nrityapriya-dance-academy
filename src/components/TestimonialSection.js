@@ -164,6 +164,7 @@ export default function TestimonialSection() {
                         src={testimonial.image}
                         alt={testimonial.name}
                         className="w-14 h-14 rounded-full object-cover border-2 border-gray-100"
+                        unoptimized={true}
                       />
                       <div className="ml-4">
                         <p className="text-lg font-semibold text-gray-900">{testimonial.name}</p>
