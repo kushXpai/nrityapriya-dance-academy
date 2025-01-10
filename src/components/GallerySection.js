@@ -2,12 +2,12 @@ import Image from 'next/image'
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-import GalleryImage1 from '../../public/images/Gallery/Gallery-1.jpg';
-import GalleryImage2 from '../../public/images/Gallery/Gallery-2.jpg';
-import GalleryImage3 from '../../public/images/Gallery/Gallery-3.jpg';
-import GalleryImage4 from '../../public/images/Gallery/Gallery-4.jpg';
-import GalleryImage5 from '../../public/images/Gallery/Gallery-5.jpg';
-import GalleryImage6 from '../../public/images/Gallery/Gallery-6.jpg';
+import GalleryImage1 from '/public/images/Gallery/Gallery-1.jpg';
+import GalleryImage2 from '/public/images/Gallery/Gallery-2.jpg';
+import GalleryImage3 from '/public/images/Gallery/Gallery-3.jpg';
+import GalleryImage4 from '/public/images/Gallery/Gallery-4.jpg';
+import GalleryImage5 from '/public/images/Gallery/Gallery-5.jpg';
+import GalleryImage6 from '/public/images/Gallery/Gallery-6.jpg';
 
 export default function GallerySection() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);

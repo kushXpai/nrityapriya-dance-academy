@@ -2,16 +2,16 @@ import Image from 'next/image'
 import { useEffect, useCallback, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-import StudentImage1 from '../../public/images/Students/Student-1.jpg';
-import StudentImage2 from '../../public/images/Students/Student-1.jpg';
-import StudentImage3 from '../../public/images/Students/Student-3.jpg';
-import StudentImage4 from '../../public/images/Students/Student-4.jpg';
-import StudentImage5 from '../../public/images/Students/Student-5.jpg';
-import StudentImage6 from '../../public/images/Students/Student-6.jpg';
-import StudentImage7 from '../../public/images/Students/Student-7.jpg';
-import StudentImage8 from '../../public/images/Students/Student-8.jpg';
-// import StudentImage9 from '../../public/images/Students/Student-9.jpg';
-// import StudentImage10 from '../../public/images/Students/Student-10.jpg';
+import StudentImage1 from '/public/images/Students/Student-1.jpg';
+import StudentImage2 from '/public/images/Students/Student-1.jpg';
+import StudentImage3 from '/public/images/Students/Student-3.jpg';
+import StudentImage4 from '/public/images/Students/Student-4.jpg';
+import StudentImage5 from '/public/images/Students/Student-5.jpg';
+import StudentImage6 from '/public/images/Students/Student-6.jpg';
+import StudentImage7 from '/public/images/Students/Student-7.jpg';
+import StudentImage8 from '/public/images/Students/Student-8.jpg';
+// import StudentImage9 from '/public/images/Students/Student-9.jpg';
+// import StudentImage10 from '/public/images/Students/Student-10.jpg';
 
 export default function TestimonialSection() {
 

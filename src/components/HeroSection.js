@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import HeroImage from "../../public/images/HeroSection.jpg";
+import HeroImage from "/public/images/HeroSection.jpg";
 
 export default function HeroSection() {
   const scrollToContent = () => {

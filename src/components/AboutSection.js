@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import { Instagram } from 'lucide-react';
-import TeacherImage from '../../public/images/Teacher.jpg';
+import TeacherImage from '/public/images/Teacher.jpg';
 
 export default function AboutSection() {
   return (

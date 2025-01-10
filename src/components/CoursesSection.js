@@ -1,12 +1,12 @@
 import Image from 'next/image'
 import { useState } from 'react';
-import CourseImage1 from '../../public/images/CourseImage/CourseImage-1.jpg';
-import CourseImage2 from '../../public/images/CourseImage/CourseImage-2.jpg';
-import CourseImage3 from '../../public/images/CourseImage/CourseImage-3.jpg';
-import CourseImage4 from '../../public/images/CourseImage/CourseImage-4.jpg';
-import CourseImage5 from '../../public/images/CourseImage/CourseImage-5.jpg';
-import CourseImage6 from '../../public/images/CourseImage/CourseImage-6.jpg';
-import CourseImage7 from '../../public/images/CourseImage/CourseImage-7.jpg';
+import CourseImage1 from '/public/images/CourseImage/CourseImage-1.jpg';
+import CourseImage2 from '/public/images/CourseImage/CourseImage-2.jpg';
+import CourseImage3 from '/public/images/CourseImage/CourseImage-3.jpg';
+import CourseImage4 from '/public/images/CourseImage/CourseImage-4.jpg';
+import CourseImage5 from '/public/images/CourseImage/CourseImage-5.jpg';
+import CourseImage6 from '/public/images/CourseImage/CourseImage-6.jpg';
+import CourseImage7 from '/public/images/CourseImage/CourseImage-7.jpg';
 
 export default function CoursesSection() {
   const [activeFilter, setActiveFilter] = useState('all');
