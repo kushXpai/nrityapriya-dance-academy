@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# NrityaPriya Dance Academy Website
 
-## Getting Started
+Welcome to the NrityaPriya Dance Academy website repository! This project is designed to showcase the beauty and artistry of Kathak dance while providing an engaging and user-friendly experience for students and visitors.
 
-First, run the development server:
+## Description
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+The NrityaPriya Dance Academy website serves as an online platform to:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Share information about the academy, its founder, and instructors.
+- Highlight upcoming events and workshops.
+- Display student testimonials and achievements.
+- Facilitate inquiries and registrations for courses.
+- Promote the academy's presence on social media.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+The website is responsive and optimized for all devices, ensuring a seamless user experience across desktops, tablets, and mobile devices.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Features
 
-## Learn More
+- **About Section**: Introduces the founder and the academy's background.
+- **Testimonials**: Auto-scrolling carousel with feedback from students and alumni.
+- **Course Inquiry**: Interactive forms with dynamic mode selection (online/offline).
+- **Responsive Design**: Optimized for desktop, tablet, and mobile views.
+- **Smooth Animations**: Auto-scrolling testimonials and hover effects for enhanced interactivity.
 
-To learn more about Next.js, take a look at the following resources:
+## Installation
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+To get started with the project, follow these steps:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/kushXpai/nrityapriya-dance-academy.git
+   ```
+2. Navigate to the project directory:
+   ```bash
+   cd nrityapriya-dance-academy
+   ```
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+4. Start the development server:
+   ```bash
+   npm start
+   ```
+5. Open your browser and navigate to `http://localhost:3000` to view the website.
 
-## Deploy on Vercel
+## Usage
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Modify the `src` folder to update website content, images, or styling.
+- Add testimonials in the `TestimonialSection` component for new feedback.
+- Replace `images` in the `public` folder to update visuals.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Technologies Used
+
+- **Frontend**: React.js, Tailwind CSS
+- **Icons**: Font Awesome React Icons
+- **Animation**: CSS transitions and JavaScript-based smooth scrolling
+
+## Contribution
+
+Contributions are welcome! If you'd like to contribute:
+
+1. Fork the repository.
+2. Create a new branch:
+   ```bash
+   git checkout -b feature-name
+   ```
+3. Make your changes and commit them:
+   ```bash
+   git commit -m "Description of changes"
+   ```
+4. Push to your branch:
+   ```bash
+   git push origin feature-name
+   ```
+5. Create a pull request.
+
+## License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
+
+## Acknowledgments
+
+Special thanks to all students, instructors, and contributors who make NrityaPriya Dance Academy a beacon of cultural excellence.
+
+---
+
+Happy coding! 💃
