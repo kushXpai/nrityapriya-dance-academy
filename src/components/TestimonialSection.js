@@ -1,17 +1,5 @@
-import Image from 'next/image'
 import { useEffect, useCallback, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-
-import StudentImage1 from '/public/images/Students/Student-1.jpg';
-import StudentImage2 from '/public/images/Students/Student-1.jpg';
-import StudentImage3 from '/public/images/Students/Student-3.jpg';
-import StudentImage4 from '/public/images/Students/Student-4.jpg';
-import StudentImage5 from '/public/images/Students/Student-5.jpg';
-import StudentImage6 from '/public/images/Students/Student-6.jpg';
-import StudentImage7 from '/public/images/Students/Student-7.jpg';
-import StudentImage8 from '/public/images/Students/Student-8.jpg';
-// import StudentImage9 from '/public/images/Students/Student-9.jpg';
-// import StudentImage10 from '/public/images/Students/Student-10.jpg';
 
 export default function TestimonialSection() {
 
@@ -22,65 +10,40 @@ export default function TestimonialSection() {
 
   const testimonials = [
     {
-      name: "Priya Shah",
+      name: "Krishna Parajia",
       role: "Student",
-      quote: "Learning Bharatanatyam here has been a transformative experience. The attention to detail and personal guidance is exceptional.",
-      image: StudentImage1,
+      quote: "As a 1st year student of Kathak, my journey has been amazing. Under the expert guidance of my guru, Priyanka Maam, I have developed a deeper understanding of the art form, and their patient teaching style has inspired me to push my boundaries.I am excited to continue growing and learning, and I am grateful for their mentorship and encouragement in this beautiful journey of Kathak boundaries.I am excited to continue growing and learning, and I am grateful for their mentorship and encouragement in this beautiful journey of Kathak."
     },
     {
-      name: "John Doe",
-      role: "Student",
-      quote: "The courses provided a great foundation in Kathak and were very well structured. The teachers were supportive and encouraging throughout.",
-      image: StudentImage2,
+      name: "Pooja",
+      role: "Nyraa's Mother",
+      quote: "I wanted to take a moment to express my heartfelt gratitude for the incredible impact you've had on Nyraa's Kathak journey. Since April 2023, this experience has been truly transformational for her. Your patience, commitment, knowledge, and vast experience in Kathak are beyond commendable. It's clear that you pour your heart into teaching, and the depth of your expertise makes all the difference in Nyraa's learning."
     },
     {
-      name: "Amit Kumar",
+      name: "Ruchi Rathod",
+      role: "Student",
+      quote: "I am incredibly grateful to have been learning Kathak from Priyanka ma'am for the past few years. She is a patient and supportive teacher who encourages me to push my boundaries while respecting my pace of learning. Her deep knowledge of Kathak is evident in every lesson, and she has a great way of breaking down complex steps into simpler parts. More than just a skilled teacher, she creates a warm and inspiring environment that builds confidence and growth. I feel truly fortunate to be learning from her"
+    },
+    {
+      name: "Anika Dalvi",
+      role: "Student",
+      quote: "Amongst the things that I like, Kathak tops the list. Am excited about Kathakak at the age of 7 and the last 7 years have been truly enriching. I always look forward to my learning sessions every weekend. It sort of sets me free, free to express and feel. During Covid as well, the Kathak classes continued through online sessions. The commitment of Priyanka Miss to the art form is admirable and I hope to emulate her in every aspect. She is also one of the reason that I started loving Kathak. Every student needs a good Guru, and my Guru is not just graceful in her dance but also in the way she conducts herself with her students. Am excited about Kathak and Looking forward to the journey. "
+    },
+    {
+      name: "Snehal Gamare",
       role: "Alumnus",
-      quote: "Thanks to the training, I was able to perform at a professional level. The guidance I received helped me develop both technically and artistically.",
-      image: StudentImage3,
+      quote: "Learning Kathak over the past two years has been an incredibly enriching experience for me. The grace, rhythm, and storytelling aspects of this classical dance have deepened my appreciation for the art form. Each class challenges me to improve, whether it's mastering footwork, hand gestures, or expressions. The supportive learning environment has boosted my confidence and discipline. Kathak has truly become a passion, and I look forward to every session.  Priyanka ma'am is an inspiring mentor, patiently guiding us with dedication and expertise. Her passion for Kathak is contagious, making every class a joyful and transformative experience. "
     },
     {
-      name: "Neha Gupta",
-      role: "Student",
-      quote: "A wonderful learning environment with friendly teachers who helped me reach my potential.",
-      image: StudentImage4,
+      name: "Hemangi",
+      role: "Nirmayi's Mother",
+      quote: "My daughter has truly blossomed since she started learning Kathak. She has developed a deep appreciation for the art, along with improved confidence and discipline. The classes are engaging, and she looks forward to each session with excitement. Her footwork, expressions, and grace have improved tremendously. Watching her perform with such joy makes us so proud. Priyanka ma'am's dedication, and passion for Kathak is truly commendable. She creates a nurturing environment that encourages every child to excel."
     },
     {
-      name: "Ravi Singh",
-      role: "Alumnus",
-      quote: "The journey was truly enriching. It not only improved my dance but also my personal growth.",
-      image: StudentImage5,
+      name: "Kinjal Shah",
+      role: "Swara's Mother",
+      quote: "Firstly i would like to wholeheartedly thank Priyanka mam..my daughter started her training for Kathak with NrityaPriya school of dance almost 3 years back. I was reluctant initially as my daughter was about 5.5 years old. But she was very patient with her. But i must say Priyanka mam is vey sincere and passionate about her work.I have only one thing to say that I am very happy that I enrolled my daughter for Kathak with Priyanka mam..Thank you"
     },
-    {
-      name: "Anjali Desai",
-      role: "Student",
-      quote: "The instructors here not only teach dance but instill a deep love for the art form. I’ve learned so much in a short time!",
-      image: StudentImage6,
-    },
-    {
-      name: "Suresh Patel",
-      role: "Alumnus",
-      quote: "The rigorous training and constant motivation helped me push my boundaries. I’m grateful for this experience.",
-      image: StudentImage7,
-    },
-    {
-      name: "Simran Mehta",
-      role: "Student",
-      quote: "I never thought I could be this skilled! The personalized attention made all the difference in my learning journey.",
-      image: StudentImage8,
-    },
-    // {
-    //   name: "Rajesh Reddy",
-    //   role: "Alumnus",
-    //   quote: "I gained confidence in my abilities and developed a strong foundation in classical dance that has helped me in my professional life.",
-    //   image: StudentImage9,
-    // },
-    // {
-    //   name: "Kiran Joshi",
-    //   role: "Student",
-    //   quote: "The atmosphere here is so nurturing. I’ve improved a lot, and the teachers are always encouraging me to do better.",
-    //   image: StudentImage10,
-    // },
   ];
 
   const handleNext = useCallback(() => {
@@ -159,14 +122,8 @@ export default function TestimonialSection() {
                     key={index}
                     className="bg-white rounded-xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl border border-gray-100"
                   >
-                    <div className="flex items-center mb-4">
-                      <Image
-                        src={testimonial.image}
-                        alt={testimonial.name}
-                        className="w-14 h-14 rounded-full object-cover border-2 border-gray-100"
-                        unoptimized={true}
-                      />
-                      <div className="ml-4">
+                    <div className="mb-4">
+                      <div>
                         <p className="text-lg font-semibold text-gray-900">{testimonial.name}</p>
                         <p className="text-sm text-gray-500">{testimonial.role}</p>
                       </div>

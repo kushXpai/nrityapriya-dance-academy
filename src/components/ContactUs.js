@@ -169,7 +169,7 @@ export default function ContactUs() {
                                             name="course"
                                             value={formData.course}
                                             onChange={handleInputChange}
-                                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg 
+                                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-gray-700
                                                 focus:outline-none focus:border-[#EE3224] focus:ring-2 focus:ring-[#EE3224] 
                                                 focus:ring-opacity-50 transition-all duration-300"
                                         >
@@ -199,9 +199,9 @@ export default function ContactUs() {
                                                     className={`flex-1 px-6 py-3 rounded-lg text-lg font-semibold 
                                                     transition-all duration-300 transform hover:-translate-y-1 border-2 
                                                     ${mode === modeOption
-                                                            ? "border-[#EE3224] bg-white shadow-lg"
-                                                            : "border-gray-200 text-gray-600 hover:border-gray-300"
-                                                        }`}
+                                                        ? "border-[#EE3224] bg-white text-gray-800 shadow-lg"
+                                                        : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                                                    }`}
                                                 >
                                                     {modeOption.charAt(0).toUpperCase() + modeOption.slice(1)}
                                                 </button>
