@@ -174,13 +174,7 @@ export default function ContactUs() {
                                                 focus:ring-opacity-50 transition-all duration-300"
                                         >
                                             {[
-                                                "Year 1 - Prarambhik",
-                                                "Year 2 - Praveshika Pratham",
-                                                "Year 3 - Praveshika Poorna",
-                                                "Year 4 - Madhyama Pratham",
-                                                "Year 5 - Madhyama Poorna",
-                                                "Year 6 - Visharad Pratham",
-                                                "Year 7 - Visharad Poorna",
+                                                "Kathak Course",
                                                 "Semiclassical Course"
                                             ].map((option) => (
                                                 <option key={option} value={option}>{option}</option>
