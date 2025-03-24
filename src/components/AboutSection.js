@@ -3,6 +3,14 @@ import { Instagram } from 'lucide-react';
 import TeacherImage from '/public/images/Teacher.jpeg';
 
 export default function AboutSection() {
+
+  const currentYear = new Date().getFullYear();
+  const teachingStartYear = 2017;
+  const dancingStartYear = 2005;
+
+  const teachingExperience = currentYear - teachingStartYear;
+  const dancingExperience = currentYear - dancingStartYear;
+
   return (
     <section className="py-16 bg-gradient-to-b from-gray-50 to-gray-100" id="about-us">
       <div className="max-w-6xl mx-auto px-4">
@@ -66,11 +74,11 @@ export default function AboutSection() {
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 mb-6">
               <div className="bg-white p-6 rounded-lg shadow-sm text-center">
-                <p className="text-[#EE3224] font-bold text-2xl">8 Years</p>
+                <p className="text-[#EE3224] font-bold text-2xl">{teachingExperience} Years</p>
                 <p className="text-gray-600">Teaching Experience</p>
               </div>
               <div className="bg-white p-6 rounded-lg shadow-sm text-center">
-                <p className="text-[#EE3224] font-bold text-2xl">20 Years</p>
+                <p className="text-[#EE3224] font-bold text-2xl">{dancingExperience} Years</p>
                 <p className="text-gray-600">Dancing Experience</p>
               </div>
               <div className="bg-white p-6 rounded-lg shadow-sm text-center">
