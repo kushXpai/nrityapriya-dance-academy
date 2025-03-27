@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { FaInstagram, FaEnvelope, FaStar, FaGraduationCap, FaLaptop, FaUsers } from "react-icons/fa";
+import { auth } from "../../firebase/firebaseConfig";
+import { db } from "../../firebase/firebaseConfig";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 export default function ContactUs() {
     const [mode, setMode] = useState("online");
@@ -8,9 +11,12 @@ export default function ContactUs() {
         email: "",
         mobile: "",
         address: "",
-        course: "Year 1 - Prarambhik"
+        course: "Kathak Course",
+        review: "unreviewed", // New field
+        status: "underreview" // New field
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitMessage, setSubmitMessage] = useState("");
 
     const benefits = [
         {
@@ -45,7 +51,37 @@ export default function ContactUs() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
-        setTimeout(() => setIsSubmitting(false), 1000);
+        setSubmitMessage("");
+
+        try {
+            // Add data to Firestore
+            const docRef = await addDoc(collection(db, "student_inquiries"), {
+                ...formData,
+                mode: mode,
+                timestamp: serverTimestamp(),
+                review: "unreviewed", // Explicitly set default
+                status: "underreview" // Explicitly set default
+            });
+
+            // Reset form after successful submission
+            setFormData({
+                name: "",
+                email: "",
+                mobile: "",
+                address: "",
+                course: "Kathak Course",
+                review: "unreviewed",
+                status: "underreview"
+            });
+
+            setSubmitMessage("Your inquiry has been submitted successfully!");
+            setMode("online");
+        } catch (error) {
+            console.error("Error submitting form:", error);
+            setSubmitMessage("Failed to submit. Please try again.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -126,42 +162,52 @@ export default function ContactUs() {
                                 <p className="text-gray-600 mt-2">Fill out the form below to enroll in our classes</p>
                             </div>
 
-                            <form onSubmit={handleSubmit} className="space-y-6">
-                                <div className="space-y-4">
-                                    {["name", "email", "mobile"].map((field) => (
-                                        <div
-                                            key={field}
-                                            className="group focus-within:transform focus-within:-translate-y-1 transition-transform duration-200"
-                                        >
-                                            <label className="text-lg font-semibold text-gray-700 capitalize block mb-2">
-                                                {field}
-                                            </label>
-                                            <input
-                                                type={field === "email" ? "email" : "text"}
-                                                name={field}
-                                                value={formData[field]}
-                                                onChange={handleInputChange}
-                                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg 
-                                                    focus:outline-none focus:border-[#EE3224] focus:ring-2 focus:ring-[#EE3224] 
-                                                    focus:ring-opacity-50 transition-all duration-300"
-                                                placeholder={`Enter your ${field}`}
-                                            />
-                                        </div>
-                                    ))}
+                            {submitMessage && (
+                                <div className={`p-4 rounded-lg text-center ${
+                                    submitMessage.includes("successfully") 
+                                        ? "bg-green-100 text-green-800" 
+                                        : "bg-red-100 text-red-800"
+                                }`}>
+                                    {submitMessage}
+                                </div>
+                            )}
 
-                                    <div className="group focus-within:transform focus-within:-translate-y-1 transition-transform duration-200">
-                                        <label className="text-lg font-semibold text-gray-700 block mb-2">Address</label>
-                                        <textarea
-                                            name="address"
-                                            value={formData.address}
+<form onSubmit={handleSubmit} className="space-y-6">
+                            <div className="space-y-4">
+                                {["name", "email", "mobile"].map((field) => (
+                                    <div
+                                        key={field}
+                                        className="group focus-within:transform focus-within:-translate-y-1 transition-transform duration-200"
+                                    >
+                                        <label className="text-lg font-semibold text-gray-700 capitalize block mb-2">
+                                            {field}
+                                        </label>
+                                        <input
+                                            type={field === "email" ? "email" : "text"}
+                                            name={field}
+                                            value={formData[field]}
                                             onChange={handleInputChange}
-                                            rows="4"
-                                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg 
+                                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-black {/* Added text-black */}
                                                 focus:outline-none focus:border-[#EE3224] focus:ring-2 focus:ring-[#EE3224] 
                                                 focus:ring-opacity-50 transition-all duration-300"
-                                            placeholder="Enter your address"
+                                            placeholder={`Enter your ${field}`}
                                         />
                                     </div>
+                                ))}
+
+                                <div className="group focus-within:transform focus-within:-translate-y-1 transition-transform duration-200">
+                                    <label className="text-lg font-semibold text-gray-700 block mb-2">Address</label>
+                                    <textarea
+                                        name="address"
+                                        value={formData.address}
+                                        onChange={handleInputChange}
+                                        rows="4"
+                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-black {/* Added text-black */}
+                                            focus:outline-none focus:border-[#EE3224] focus:ring-2 focus:ring-[#EE3224] 
+                                            focus:ring-opacity-50 transition-all duration-300"
+                                        placeholder="Enter your address"
+                                    />
+                                </div>
 
                                     <div className="space-y-2">
                                         <label className="text-lg font-semibold text-gray-700 block mb-2">Course Level</label>

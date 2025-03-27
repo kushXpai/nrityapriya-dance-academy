@@ -15,19 +15,29 @@ export default function AdminTestimonials() {
         try {
           const testimonialsCollection = collection(db, 'testimonials');
           const testimonialsSnapshot = await getDocs(testimonialsCollection);
-          const testimonialsList = testimonialsSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            date: doc.data().date?.toDate().toLocaleDateString('en-US', {
+          const testimonialsList = testimonialsSnapshot.docs.map(doc => {
+            const docData = doc.data();
+            let formattedDate = new Date().toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'short',
               day: 'numeric'
-            }) || new Date().toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric'
-            })
-          }));
+            });
+    
+            if (docData.date && typeof docData.date.toDate === 'function') {
+              formattedDate = docData.date.toDate().toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+              });
+            }
+    
+            return {
+              id: doc.id,
+              ...docData,
+              date: formattedDate
+            };
+          });
+    
           setTestimonials(testimonialsList);
           setLoading(false);
         } catch (error) {
@@ -35,7 +45,7 @@ export default function AdminTestimonials() {
           setLoading(false);
         }
       };
-  
+    
       fetchTestimonials();
     }, []);
   
