@@ -1,8 +1,8 @@
 import { v2 as cloudinary } from 'cloudinary';
 import formidable from 'formidable';
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
-import { collection, getDocs } from "firebase/firestore";
+import { collection, addDoc } from "firebase/firestore";
 import { db } from "../../../../firebase/firebaseConfig";
 
 // Disable the default body parser
@@ -21,114 +21,95 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+// Promisify cloudinary upload
+const cloudinaryUpload = (buffer, options) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      options,
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      }
+    );
+    uploadStream.end(buffer);
+  });
+};
+
 // Upload a video
 async function handleUploadVideo(req, res) {
-  return new Promise((resolve, reject) => {
-    const form = formidable({
-      keepExtensions: true,
-      multiples: true,
-      maxFileSize: 100 * 1024 * 1024,
-    });
-
-    form.parse(req, async (err, fields, files) => {
-      if (err) {
-        if (err.code === 'LIMIT_FILE_SIZE') {
-          res.status(413).json({
-            error: 'File too large',
-            details: 'Maximum file size is 100MB'
-          });
-        } else {
-          res.status(500).json({
-            error: 'File upload failed',
-            details: err.message
-          });
-        }
-        return resolve();
-      }
-
-      try {
-        // Ensure the video file exists
-        const videoFile = files.file;
-        const thumbnailFile = files.thumbnail;
-
-        if (!videoFile) {
-          res.status(400).json({ error: 'No video file uploaded' });
-          return resolve();
-        }
-
-        // Read video file as a buffer
-        const videoBuffer = fs.readFileSync(videoFile.filepath);
-
-        // Extract additional metadata
-        const name = fields.name || videoFile.originalFilename;
-        const description = fields.description || '';
-        const isArchived = fields.isArchived === 'true';
-
-        // Upload video to Cloudinary
-        const videoResult = await new Promise((uploadResolve, uploadReject) => {
-          const uploadStream = cloudinary.uploader.upload_stream(
-            {
-              folder: 'nityapriyavideos',
-              resource_type: 'video',
-              public_id: name ? name.replace(/\s+/g, '-').toLowerCase() : undefined
-            },
-            (error, result) => {
-              if (error) uploadReject(error);
-              else uploadResolve(result);
-            }
-          );
-          uploadStream.end(videoBuffer);
-        });
-
-        // Upload thumbnail if provided
-        let thumbnailUrl = null;
-        if (thumbnailFile) {
-          const thumbnailBuffer = fs.readFileSync(thumbnailFile.filepath);
-          const thumbnailResult = await new Promise((uploadResolve, uploadReject) => {
-            const uploadStream = cloudinary.uploader.upload_stream(
-              {
-                folder: 'nityapriyavideos/thumbnails',
-                resource_type: 'image',
-                public_id: `${name}-thumbnail`.replace(/\s+/g, '-').toLowerCase()
-              },
-              (error, result) => {
-                if (error) uploadReject(error);
-                else uploadResolve(result);
-              }
-            );
-            uploadStream.end(thumbnailBuffer);
-          });
-
-          thumbnailUrl = thumbnailResult.secure_url;
-
-          // Optional: Delete temp thumbnail file
-          fs.unlinkSync(thumbnailFile.filepath);
-        }
-
-        // Optional: Delete temp video file
-        fs.unlinkSync(videoFile.filepath);
-
-        // Attach additional metadata to the response
-        const enhancedResult = {
-          ...videoResult,
-          name,
-          description,
-          isArchived,
-          thumbnailUrl
-        };
-
-        res.status(200).json(enhancedResult);
-        resolve();
-      } catch (uploadError) {
-        console.error('Cloudinary Upload Error:', uploadError);
-        res.status(500).json({
-          error: 'Upload to Cloudinary failed',
-          details: uploadError.message
-        });
-        resolve();
-      }
-    });
+  const form = formidable({
+    keepExtensions: true,
+    multiples: true,
+    maxFileSize: 100 * 1024 * 1024,
   });
+
+  try {
+    const { fields, files } = await new Promise((resolve, reject) => {
+      form.parse(req, (err, fields, files) => {
+        if (err) reject(err);
+        else resolve({ fields, files });
+      });
+    });
+
+    // Ensure the video file exists
+    const videoFile = files.file;
+    const thumbnailFile = files.thumbnail;
+
+    if (!videoFile) {
+      return res.status(400).json({ error: 'No video file uploaded' });
+    }
+
+    // Read video file as a buffer using fs.promises
+    const videoBuffer = await fs.readFile(videoFile.filepath);
+
+    // Extract additional metadata
+    const name = fields.name || videoFile.originalFilename;
+    const description = fields.description || '';
+    const isArchived = fields.isArchived === 'true';
+
+    // Upload video to Cloudinary
+    const videoResult = await cloudinaryUpload(videoBuffer, {
+      folder: 'nityapriyavideos',
+      resource_type: 'video',
+      public_id: name ? name.replace(/\s+/g, '-').toLowerCase() : undefined
+    });
+
+    // Upload thumbnail if provided
+    let thumbnailUrl = null;
+    if (thumbnailFile) {
+      const thumbnailBuffer = await fs.readFile(thumbnailFile.filepath);
+      const thumbnailResult = await cloudinaryUpload(thumbnailBuffer, {
+        folder: 'nityapriyavideos/thumbnails',
+        resource_type: 'image',
+        public_id: `${name}-thumbnail`.replace(/\s+/g, '-').toLowerCase()
+      });
+
+      thumbnailUrl = thumbnailResult.secure_url;
+
+      // Delete temp thumbnail file
+      await fs.unlink(thumbnailFile.filepath);
+    }
+
+    // Delete temp video file
+    await fs.unlink(videoFile.filepath);
+
+    // Attach additional metadata to the response
+    const enhancedResult = {
+      ...videoResult,
+      name,
+      description,
+      isArchived,
+      thumbnailUrl
+    };
+
+    res.status(200).json(enhancedResult);
+  } catch (uploadError) {
+    console.error('Cloudinary Upload Error:', uploadError);
+    res.status(500).json({
+      error: 'Upload to Cloudinary failed',
+      details: uploadError.message
+    });
+  }
 }
 
 export default async function handler(req, res) {
@@ -155,7 +136,7 @@ export default async function handler(req, res) {
   }
 }
 
-// Existing handleGetVideos function remains the same
+// Existing handleGetVideos function (unchanged)
 async function handleGetVideos(req, res) {
   try {
     // Fetch Cloudinary videos
