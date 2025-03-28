@@ -9,6 +9,7 @@ import { db } from "../../../../firebase/firebaseConfig";
 export const config = {
   api: {
     bodyParser: false,
+    responseLimit: false,
   },
 };
 
