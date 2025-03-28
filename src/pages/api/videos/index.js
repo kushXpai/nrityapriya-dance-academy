@@ -9,7 +9,8 @@ import { db } from "../../../../firebase/firebaseConfig";
 export const config = {
   api: {
     bodyParser: false,
-    responseLimit: false,
+    responseLimit: '100mb',
+    sizeLimit: '100mb',
   },
 };
 
@@ -26,15 +27,22 @@ async function handleUploadVideo(req, res) {
     const form = formidable({
       keepExtensions: true,
       multiples: true,
+      maxFileSize: 100 * 1024 * 1024,
     });
 
     form.parse(req, async (err, fields, files) => {
       if (err) {
-        console.error('Form Parse Error:', err);
-        res.status(500).json({ 
-          error: 'File upload failed', 
-          details: err.message 
-        });
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          res.status(413).json({
+            error: 'File too large',
+            details: 'Maximum file size is 100MB'
+          });
+        } else {
+          res.status(500).json({
+            error: 'File upload failed',
+            details: err.message
+          });
+        }
         return resolve();
       }
 
@@ -59,11 +67,11 @@ async function handleUploadVideo(req, res) {
         // Upload video to Cloudinary
         const videoResult = await new Promise((uploadResolve, uploadReject) => {
           const uploadStream = cloudinary.uploader.upload_stream(
-            { 
+            {
               folder: 'nityapriyavideos',
               resource_type: 'video',
               public_id: name ? name.replace(/\s+/g, '-').toLowerCase() : undefined
-            }, 
+            },
             (error, result) => {
               if (error) uploadReject(error);
               else uploadResolve(result);
@@ -78,11 +86,11 @@ async function handleUploadVideo(req, res) {
           const thumbnailBuffer = fs.readFileSync(thumbnailFile.filepath);
           const thumbnailResult = await new Promise((uploadResolve, uploadReject) => {
             const uploadStream = cloudinary.uploader.upload_stream(
-              { 
+              {
                 folder: 'nityapriyavideos/thumbnails',
                 resource_type: 'image',
                 public_id: `${name}-thumbnail`.replace(/\s+/g, '-').toLowerCase()
-              }, 
+              },
               (error, result) => {
                 if (error) uploadReject(error);
                 else uploadResolve(result);
@@ -113,9 +121,9 @@ async function handleUploadVideo(req, res) {
         resolve();
       } catch (uploadError) {
         console.error('Cloudinary Upload Error:', uploadError);
-        res.status(500).json({ 
-          error: 'Upload to Cloudinary failed', 
-          details: uploadError.message 
+        res.status(500).json({
+          error: 'Upload to Cloudinary failed',
+          details: uploadError.message
         });
         resolve();
       }
@@ -140,9 +148,9 @@ export default async function handler(req, res) {
     }
   } catch (error) {
     console.error('API Handler Error:', error);
-    res.status(500).json({ 
-      error: 'Internal Server Error', 
-      details: error.message 
+    res.status(500).json({
+      error: 'Internal Server Error',
+      details: error.message
     });
   }
 }
@@ -161,7 +169,7 @@ async function handleGetVideos(req, res) {
     // Fetch all video metadata from Firestore
     const videosRef = collection(db, 'videos');
     const querySnapshot = await getDocs(videosRef);
-    
+
     // Create a map of metadata by publicId
     const metadataMap = {};
     querySnapshot.forEach(doc => {
@@ -178,9 +186,9 @@ async function handleGetVideos(req, res) {
     res.status(200).json(videosWithMetadata);
   } catch (error) {
     console.error('Get Videos Error:', error);
-    res.status(500).json({ 
-      error: 'Failed to fetch videos', 
-      details: error.message 
+    res.status(500).json({
+      error: 'Failed to fetch videos',
+      details: error.message
     });
   }
 }

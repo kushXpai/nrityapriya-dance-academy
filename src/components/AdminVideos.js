@@ -36,8 +36,8 @@ export default function AdminVideos() {
                 <button
                     onClick={() => onViewChange('grid')}
                     className={`p-2 rounded-full transition-all duration-300 ${viewMode === 'grid'
-                            ? 'bg-white shadow-md text-blue-600'
-                            : 'text-gray-500 hover:bg-white/50'
+                        ? 'bg-white shadow-md text-blue-600'
+                        : 'text-gray-500 hover:bg-white/50'
                         }`}
                 >
                     <Grid size={20} />
@@ -45,8 +45,8 @@ export default function AdminVideos() {
                 <button
                     onClick={() => onViewChange('list')}
                     className={`p-2 rounded-full transition-all duration-300 ${viewMode === 'list'
-                            ? 'bg-white shadow-md text-blue-600'
-                            : 'text-gray-500 hover:bg-white/50'
+                        ? 'bg-white shadow-md text-blue-600'
+                        : 'text-gray-500 hover:bg-white/50'
                         }`}
                 >
                     <List size={20} />
@@ -82,8 +82,19 @@ export default function AdminVideos() {
     // Handle video file selection
     const handleVideoFileSelect = (event) => {
         const videoFile = event.target.files[0];
+
+        // Maximum file size (100MB)
+        const maxSizeBytes = 100 * 1024 * 1024;
+
+        if (videoFile.size > maxSizeBytes) {
+            alert('File is too large. Maximum file size is 100MB.');
+            event.target.value = ''; // Clear the file input
+            setSelectedVideoFile(null);
+            return;
+        }
+
         setSelectedVideoFile(videoFile);
-        setVideoName(videoFile.name); // Automatically set video name
+        setVideoName(videoFile.name);
     };
 
     // Handle thumbnail file selection
@@ -102,7 +113,7 @@ export default function AdminVideos() {
 
         const formData = new FormData();
         formData.append('file', selectedVideoFile);
-        
+
         // Thumbnail is optional
         if (selectedThumbnailFile) {
             formData.append('thumbnail', selectedThumbnailFile);
@@ -269,15 +280,15 @@ export default function AdminVideos() {
     const renderVideos = () => {
         const renderThumbnail = (video) => {
             // Priority: Use thumbnailUrl from Cloudinary, then generated thumbnail, then fallback to video source
-            const thumbnailSrc = 
-                video.thumbnailUrl || 
-                video.thumbnail || 
+            const thumbnailSrc =
+                video.thumbnailUrl ||
+                video.thumbnail ||
                 video.secure_url;
 
             return (
-                <img 
-                    src={thumbnailSrc} 
-                    alt={`${video.name} thumbnail`} 
+                <img
+                    src={thumbnailSrc}
+                    alt={`${video.name} thumbnail`}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                         // Fallback to video source if thumbnail fails
@@ -298,7 +309,7 @@ export default function AdminVideos() {
                         >
                             <div className="aspect-w-16 aspect-h-9 w-full bg-gray-200 rounded-lg overflow-hidden relative">
                                 {renderThumbnail(video)}
-                                
+
                                 {/* Hover Overlay */}
                                 <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button
