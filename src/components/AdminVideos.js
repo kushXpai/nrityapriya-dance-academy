@@ -10,7 +10,7 @@ import {
     deleteDoc,
     updateDoc
 } from 'firebase/firestore';
-import { db } from "../firebase/firebaseConfig";
+import { db } from "../../firebase/firebaseConfig";
 
 export default function AdminVideos() {
     const [videos, setVideos] = useState([]);

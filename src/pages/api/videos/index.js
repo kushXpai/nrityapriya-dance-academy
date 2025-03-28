@@ -1,7 +1,7 @@
 import { v2 as cloudinary } from 'cloudinary';
 import formidable from 'formidable';
 import { collection, addDoc, getDocs } from "firebase/firestore";
-import { db } from "../../../firebase/firebaseConfig";
+import { db } from "../../../../firebase/firebaseConfig";
 
 export const config = {
   api: {
