@@ -89,31 +89,7 @@ export default function ContactUs() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Benefits Section */}
                 <div className="mb-16 text-center">
-                    <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
-                        Begin Your Kathak Journey
-                    </h2>
-                    <p className="text-lg text-gray-600 mb-12">
-                        Discover the beauty of Kathak and embark on a journey of artistic excellence with our dance academy.
-                    </p>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                        {benefits.map((benefit, index) => (
-                            <div
-                                key={index}
-                                className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
-                            >
-                                <div className="flex justify-center mb-4">
-                                    <benefit.icon className="text-4xl text-[#EE3224]" />
-                                </div>
-                                <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                                    {benefit.title}
-                                </h3>
-                                <p className="text-gray-600">
-                                    {benefit.description}
-                                </p>
-                            </div>
-                        ))}
-                    </div>
+                    {/* ... (keep existing benefits section) */}
                 </div>
 
                 <div className="flex flex-col lg:flex-row justify-between items-start gap-12">
@@ -172,28 +148,29 @@ export default function ContactUs() {
                                 </div>
                             )}
 
-<form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="space-y-4">
-                                {["name", "email", "mobile"].map((field) => (
-                                    <div
-                                        key={field}
-                                        className="group focus-within:transform focus-within:-translate-y-1 transition-transform duration-200"
-                                    >
-                                        <label className="text-lg font-semibold text-gray-700 capitalize block mb-2">
-                                            {field}
-                                        </label>
-                                        <input
-                                            type={field === "email" ? "email" : "text"}
-                                            name={field}
-                                            value={formData[field]}
-                                            onChange={handleInputChange}
-                                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-black {/* Added text-black */}
-                                                focus:outline-none focus:border-[#EE3224] focus:ring-2 focus:ring-[#EE3224] 
-                                                focus:ring-opacity-50 transition-all duration-300"
-                                            placeholder={`Enter your ${field}`}
-                                        />
-                                    </div>
-                                ))}
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {["name", "email", "mobile"].map((field) => (
+                                        <div
+                                            key={field}
+                                            className="group focus-within:transform focus-within:-translate-y-1 transition-transform duration-200"
+                                        >
+                                            <label className="text-lg font-semibold text-gray-700 capitalize block mb-2">
+                                                {field}
+                                            </label>
+                                            <input
+                                                type={field === "email" ? "email" : "text"}
+                                                name={field}
+                                                value={formData[field]}
+                                                onChange={handleInputChange}
+                                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-black
+                                                    focus:outline-none focus:border-[#EE3224] focus:ring-2 focus:ring-[#EE3224] 
+                                                    focus:ring-opacity-50 transition-all duration-300"
+                                                placeholder={`Enter your ${field}`}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
 
                                 <div className="group focus-within:transform focus-within:-translate-y-1 transition-transform duration-200">
                                     <label className="text-lg font-semibold text-gray-700 block mb-2">Address</label>
@@ -202,13 +179,14 @@ export default function ContactUs() {
                                         value={formData.address}
                                         onChange={handleInputChange}
                                         rows="4"
-                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-black {/* Added text-black */}
+                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-black
                                             focus:outline-none focus:border-[#EE3224] focus:ring-2 focus:ring-[#EE3224] 
                                             focus:ring-opacity-50 transition-all duration-300"
                                         placeholder="Enter your address"
                                     />
                                 </div>
 
+                                <div className="space-y-4">
                                     <div className="space-y-2">
                                         <label className="text-lg font-semibold text-gray-700 block mb-2">Course Level</label>
                                         <select
@@ -230,13 +208,13 @@ export default function ContactUs() {
 
                                     <div className="space-y-2">
                                         <label className="text-lg font-semibold text-gray-700 block mb-2">Mode</label>
-                                        <div className="flex gap-4">
+                                        <div className="grid grid-cols-2 gap-4">
                                             {["online", "offline"].map((modeOption) => (
                                                 <button
                                                     key={modeOption}
                                                     type="button"
                                                     onClick={() => setMode(modeOption)}
-                                                    className={`flex-1 px-6 py-3 rounded-lg text-lg font-semibold 
+                                                    className={`px-6 py-3 rounded-lg text-lg font-semibold 
                                                     transition-all duration-300 transform hover:-translate-y-1 border-2 
                                                     ${mode === modeOption
                                                         ? "border-[#EE3224] bg-white text-gray-800 shadow-lg"

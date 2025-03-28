@@ -12,6 +12,7 @@ import AdminTestimonials from "@/components/AdminTestimonials";
 export default function AdminHome() {
   const [user, setUser] = useState(null);
   const [activeSection, setActiveSection] = useState("profile");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -29,6 +30,11 @@ export default function AdminHome() {
   const handleLogout = async () => {
     await signOut(auth);
     router.push("/admin");
+  };
+
+  const handleMenuItemClick = (itemId) => {
+    setActiveSection(itemId);
+    setIsMobileMenuOpen(false);
   };
 
   if (!user) {
@@ -52,8 +58,72 @@ export default function AdminHome() {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
-      <div className="w-64 bg-white shadow-md">
+      {/* Mobile Header */}
+      <div className="fixed top-0 left-0 right-0 z-20 md:hidden">
+        <div className="flex items-center justify-between bg-[#EE3224] p-4">
+          <h1 className="text-xl font-bold text-white">NrityaPriya Admin</h1>
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="text-white focus:outline-none"
+          >
+            {isMobileMenuOpen ? '✖' : '☰'}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Sidebar */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-10 md:hidden">
+          <div 
+            className="absolute inset-0 bg-black opacity-50" 
+            onClick={() => setIsMobileMenuOpen(false)}
+          ></div>
+          <div className="absolute left-0 top-0 bottom-0 w-64 bg-white shadow-md">
+            <div className="p-4 border-b">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-[#EE3224] rounded-full flex items-center justify-center text-white font-bold">
+                  {user.email?.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800 truncate">{user.email}</p>
+                  <p className="text-sm text-gray-500">Administrator</p>
+                </div>
+              </div>
+            </div>
+            <nav className="p-2">
+              <ul>
+                {menuItems.map((item) => (
+                  <li key={item.id}>
+                    <button 
+                      onClick={() => handleMenuItemClick(item.id)}
+                      className={`w-full flex items-center p-3 space-x-3 rounded-lg text-left ${
+                        activeSection === item.id 
+                          ? "bg-[#FEECE7] text-[#EE3224]" 
+                          : "text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <span className="text-xl">{item.icon}</span>
+                      <span>{item.label}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+            <div className="absolute bottom-0 w-full p-4 border-t">
+              <button 
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center p-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                <span className="mr-2">🚪</span>
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Sidebar */}
+      <div className="hidden md:block w-64 bg-white shadow-md">
         <div className="p-4 bg-[#EE3224]">
           <h1 className="text-xl font-bold text-white">NrityaPriya Admin</h1>
         </div>
@@ -99,7 +169,7 @@ export default function AdminHome() {
       </div>
       
       {/* Main content */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto pt-16 md:pt-0">
         <header className="bg-white shadow-sm">
           <div className="px-6 py-4 flex items-center justify-between">
             <h2 className="text-xl font-bold text-gray-800">{menuItems.find(item => item.id === activeSection)?.label}</h2>

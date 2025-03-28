@@ -5,9 +5,7 @@ import {
   where, 
   getDocs, 
   updateDoc, 
-  doc, 
-  addDoc,
-  deleteDoc
+  doc
 } from 'firebase/firestore';
 import { db } from '../../firebase/firebaseConfig';
 
@@ -47,8 +45,9 @@ export default function AdminStudents() {
   const [notEnrolledStudents, setNotEnrolledStudents] = useState([]);
   const [enrolledStudents, setEnrolledStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('inquired');
 
-  // Fetch student inquiries (modified to include all students, not just incomplete)
+  // All previous fetch methods remain the same...
   const fetchStudentInquiries = async () => {
     try {
       setLoading(true);
@@ -60,7 +59,6 @@ export default function AdminStudents() {
           id: doc.id,
           ...doc.data()
         }))
-        // Filter to keep students except those who are Completed + Not Enrolled or Completed + Enrolled
         .filter(student => 
           !(student.review === "completed" && 
             (student.status === "notenrolled" || student.status === "enrolled"))
@@ -74,7 +72,6 @@ export default function AdminStudents() {
     }
   };
 
-  // Fetch not enrolled students (only Completed + Not Enrolled)
   const fetchNotEnrolledStudents = async () => {
     try {
       const q = query(
@@ -95,7 +92,6 @@ export default function AdminStudents() {
     }
   };
 
-  // Fetch enrolled students (only Completed + Enrolled)
   const fetchEnrolledStudents = async () => {
     try {
       const enrolledFromInquiries = query(
@@ -124,13 +120,12 @@ export default function AdminStudents() {
     }
   };
 
-  // Update review status
+  // Previous status update methods remain the same...
   const updateReviewStatus = async (studentId, newStatus) => {
     try {
       const studentRef = doc(db, "student_inquiries", studentId);
       await updateDoc(studentRef, { review: newStatus });
       
-      // Refresh all lists to ensure correct filtering
       fetchStudentInquiries();
       fetchNotEnrolledStudents();
       fetchEnrolledStudents();
@@ -139,15 +134,12 @@ export default function AdminStudents() {
     }
   };
 
-  // Update enrollment status
   const updateEnrollmentStatus = async (studentId, newStatus) => {
     try {
       const studentRef = doc(db, "student_inquiries", studentId);
       
-      // Update the status
       await updateDoc(studentRef, { status: newStatus });
       
-      // Refresh all lists to ensure correct filtering
       fetchStudentInquiries();
       fetchNotEnrolledStudents();
       fetchEnrolledStudents();
@@ -163,7 +155,7 @@ export default function AdminStudents() {
     fetchEnrolledStudents();
   }, []);
 
-  // Render status dropdown (no changes)
+  // Render status dropdown
   const renderStatusDropdown = (currentStatus, statuses, onStatusChange) => (
     <div className="relative inline-block w-full">
       <select
@@ -185,13 +177,72 @@ export default function AdminStudents() {
     </div>
   );
 
-  // Render section with enhanced status display (modified to remove action column for enrolled and not enrolled)
-  const renderStudentSection = (title, students, type) => (
-    <div className="bg-white rounded-lg shadow mb-6">
-      <div className="p-6 border-b flex justify-between items-center">
-        <h3 className="font-medium text-gray-700">{title}</h3>
-        <span className="text-sm text-gray-500">Total: {students.length}</span>
+  // Mobile-friendly card view for students
+  const renderStudentCard = (student, type) => (
+    <div key={student.id} className="bg-white rounded-lg shadow-md p-4 mb-4">
+      <div className="flex items-center mb-4">
+        <div className="w-10 h-10 rounded-full bg-[#EE3224] flex items-center justify-center mr-3 text-white font-medium">
+          {student.name.charAt(0)}
+        </div>
+        <div>
+          <p className="font-medium text-gray-900">{student.name}</p>
+          <p className="text-sm text-gray-500">{student.course}</p>
+        </div>
       </div>
+      <div className="grid grid-cols-2 gap-2 text-sm">
+        <div>
+          <p className="text-gray-800">Mode</p>
+          <p className="text-gray-400">{student.mode}</p>
+        </div>
+        <div>
+          <p className="text-gray-800">Mobile</p>
+          <p className="text-gray-400">{student.mobile}</p>
+        </div>
+        <div>
+          <p className="text-gray-800">Email</p>
+          <p className="text-gray-400">{student.email}</p>
+        </div>
+        {type === 'inquired' && (
+          <>
+            <div>
+              <p className="text-gray-500">Review Status</p>
+              <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                ${REVIEW_STATUSES[student.review || 'unreviewed'].color}`}>
+                {renderStatusDropdown(
+                  student.review || 'unreviewed', 
+                  REVIEW_STATUSES, 
+                  (newStatus) => updateReviewStatus(student.id, newStatus)
+                )}
+              </div>
+            </div>
+            <div>
+              <p className="text-gray-500">Enrollment Status</p>
+              <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                ${ENROLLMENT_STATUSES[student.status || 'underreview'].color}`}>
+                {renderStatusDropdown(
+                  student.status || 'underreview', 
+                  ENROLLMENT_STATUSES, 
+                  (newStatus) => updateEnrollmentStatus(student.id, newStatus)
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+
+  // Render section (modified for mobile responsiveness)
+  const renderStudentSection = (title, students, type) => {
+    // For mobile view, use card layout
+    const renderMobileView = () => (
+      <div>
+        {students.map(student => renderStudentCard(student, type))}
+      </div>
+    );
+
+    // For desktop, use table
+    const renderDesktopView = () => (
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -257,33 +308,101 @@ export default function AdminStudents() {
           </tbody>
         </table>
       </div>
+    );
+
+    return (
+      <div className="bg-white rounded-lg shadow mb-6">
+        <div className="p-6 border-b flex justify-between items-center">
+          <h3 className="font-medium text-gray-700">{title}</h3>
+          <span className="text-sm text-gray-500">Total: {students.length}</span>
+        </div>
+        
+        {/* Responsive rendering */}
+        <div className="block md:hidden">
+          {renderMobileView()}
+        </div>
+        <div className="hidden md:block">
+          {renderDesktopView()}
+        </div>
+      </div>
+    );
+  };
+
+  // Responsive tab navigation for mobile
+  const renderMobileTabNavigation = () => (
+    <div className="bg-white shadow-sm mb-4 overflow-x-auto">
+      <div className="flex">
+        {[
+          { id: 'inquired', label: 'Inquired' },
+          { id: 'enrolled', label: 'Enrolled' },
+          { id: 'notEnrolled', label: 'Not Enrolled' }
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex-1 p-3 text-center ${
+              activeTab === tab.id 
+                ? 'bg-[#EE3224] text-white' 
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-4 md:p-6">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Student Management</h2>
       
-      {/* Inquired Students Section */}
-      {renderStudentSection(
-        "Inquired Students", 
-        inquiredStudents, 
-        'inquired'
-      )}
+      {/* Mobile Tab Navigation */}
+      <div className="block md:hidden">
+        {renderMobileTabNavigation()}
+      </div>
+      
+      {/* Responsive Sections */}
+      <div className="hidden md:block">
+        {renderStudentSection(
+          "Inquired Students", 
+          inquiredStudents, 
+          'inquired'
+        )}
 
-      {/* Enrolled Students Section */}
-      {renderStudentSection(
-        "Enrolled Students", 
-        enrolledStudents, 
-        'enrolledOnly'
-      )}
+        {renderStudentSection(
+          "Enrolled Students", 
+          enrolledStudents, 
+          'enrolledOnly'
+        )}
 
-      {/* Not Enrolled Students Section */}
-      {renderStudentSection(
-        "Not Enrolled Students", 
-        notEnrolledStudents, 
-        'notEnrolledOnly'
-      )}
+        {renderStudentSection(
+          "Not Enrolled Students", 
+          notEnrolledStudents, 
+          'notEnrolledOnly'
+        )}
+      </div>
+
+      {/* Mobile View with Tabs */}
+      <div className="block md:hidden">
+        {activeTab === 'inquired' && renderStudentSection(
+          "Inquired Students", 
+          inquiredStudents, 
+          'inquired'
+        )}
+
+        {activeTab === 'enrolled' && renderStudentSection(
+          "Enrolled Students", 
+          enrolledStudents, 
+          'enrolledOnly'
+        )}
+
+        {activeTab === 'notEnrolled' && renderStudentSection(
+          "Not Enrolled Students", 
+          notEnrolledStudents, 
+          'notEnrolledOnly'
+        )}
+      </div>
     </div>
   );
 }
