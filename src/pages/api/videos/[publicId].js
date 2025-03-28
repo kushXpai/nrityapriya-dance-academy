@@ -10,29 +10,17 @@ export default async function handler(req, res) {
   const { method } = req;
   const { publicId } = req.query;
 
-  // Log received publicId for debugging
-  console.log('Received publicId:', publicId);
-
   if (!publicId) {
     return res.status(400).json({ error: 'No publicId provided' });
   }
 
   try {
-    // Construct full public ID with folder prefix
     const fullPublicId = `nityapriyavideos/${publicId}`;
-    
-    // Log full public ID
-    console.log('Full publicId for deletion:', fullPublicId);
 
     if (method === 'DELETE') {
       try {
-        // Attempt to destroy the video
         const result = await cloudinary.uploader.destroy(fullPublicId, { resource_type: 'video' });
 
-        // Log the result of destroy operation
-        console.log('Cloudinary destroy result:', result);
-
-        // Check if deletion was successful
         if (result.result === 'ok' || result.result === 'not found') {
           res.status(200).json({ 
             message: 'Video deleted successfully', 
@@ -45,7 +33,6 @@ export default async function handler(req, res) {
           });
         }
       } catch (error) {
-        // Log the full error
         console.error('Detailed Cloudinary Delete Error:', error);
 
         res.status(500).json({ 

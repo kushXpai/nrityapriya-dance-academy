@@ -10,7 +10,7 @@ import {
     deleteDoc,
     updateDoc
 } from 'firebase/firestore';
-import { db } from "../../firebase/firebaseConfig";
+import { db } from "../firebase/firebaseConfig";
 
 export default function AdminVideos() {
     const [videos, setVideos] = useState([]);
@@ -21,12 +21,10 @@ export default function AdminVideos() {
     const [isArchived, setIsArchived] = useState(false);
     const [viewMode, setViewMode] = useState('grid');
 
-    // Edit modal state
     const [editingVideo, setEditingVideo] = useState(null);
     const [editName, setEditName] = useState('');
     const [editDescription, setEditDescription] = useState('');
 
-    // Upload state
     const [selectedVideoFile, setSelectedVideoFile] = useState(null);
     const [selectedThumbnailFile, setSelectedThumbnailFile] = useState(null);
 
@@ -60,16 +58,13 @@ export default function AdminVideos() {
         try {
             const cloudinaryResponse = await axios.get('/api/videos');
 
-            const videosWithMetadata = cloudinaryResponse.data.map(video => {
-                console.log('Fetched Video:', video); // Debug log
-                return {
-                    ...video,
-                    name: video.metadata?.name || video.original_filename,
-                    description: video.metadata?.description || '',
-                    isArchived: video.metadata?.isArchived || false,
-                    thumbnailUrl: video.metadata?.thumbnailUrl || video.thumbnail || null
-                };
-            });
+            const videosWithMetadata = cloudinaryResponse.data.map(video => ({
+                ...video,
+                name: video.metadata?.name || video.original_filename,
+                description: video.metadata?.description || '',
+                isArchived: video.metadata?.isArchived || false,
+                thumbnailUrl: video.metadata?.thumbnailUrl || video.thumbnail || null
+            }));
 
             setVideos(videosWithMetadata);
             setIsLoading(false);
@@ -82,13 +77,11 @@ export default function AdminVideos() {
     // Handle video file selection
     const handleVideoFileSelect = (event) => {
         const videoFile = event.target.files[0];
-
-        // Maximum file size (100MB)
         const maxSizeBytes = 100 * 1024 * 1024;
 
         if (videoFile.size > maxSizeBytes) {
             alert('File is too large. Maximum file size is 100MB.');
-            event.target.value = ''; // Clear the file input
+            event.target.value = '';
             setSelectedVideoFile(null);
             return;
         }
@@ -97,7 +90,6 @@ export default function AdminVideos() {
         setVideoName(videoFile.name);
     };
 
-    // Handle thumbnail file selection
     const handleThumbnailFileSelect = (event) => {
         const thumbnailFile = event.target.files[0];
         setSelectedThumbnailFile(thumbnailFile);
@@ -105,7 +97,6 @@ export default function AdminVideos() {
 
     // Handle file upload
     const handleUpload = async () => {
-        // Validate inputs
         if (!selectedVideoFile) {
             alert('Please select a video file');
             return;
@@ -114,7 +105,6 @@ export default function AdminVideos() {
         const formData = new FormData();
         formData.append('file', selectedVideoFile);
 
-        // Thumbnail is optional
         if (selectedThumbnailFile) {
             formData.append('thumbnail', selectedThumbnailFile);
         }
@@ -129,29 +119,6 @@ export default function AdminVideos() {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
-            console.log('Upload Response:', response.data); // Debug log
-
-            // Prepare Firestore document
-            const firestoreDoc = {
-                publicId: response.data.public_id,
-                name: videoName || selectedVideoFile.name,
-                description: videoDescription,
-                isArchived: isArchived,
-                uploadedAt: new Date(),
-                thumbnailUrl: response.data.thumbnailUrl || null
-            };
-
-            // Add video metadata to Firestore
-            const docRef = await addDoc(collection(db, 'videos'), firestoreDoc);
-
-            // Reset form fields
-            setVideoName('');
-            setVideoDescription('');
-            setIsArchived(false);
-            setSelectedVideoFile(null);
-            setSelectedThumbnailFile(null);
-
-            // Add new video to the list
             const newVideoEntry = {
                 ...response.data,
                 name: videoName || selectedVideoFile.name,
@@ -160,9 +127,14 @@ export default function AdminVideos() {
                 thumbnailUrl: response.data.thumbnailUrl || null
             };
 
-            console.log('New Video Entry:', newVideoEntry); // Debug log
-
             setVideos(prevVideos => [newVideoEntry, ...prevVideos]);
+            
+            // Reset form
+            setVideoName('');
+            setVideoDescription('');
+            setIsArchived(false);
+            setSelectedVideoFile(null);
+            setSelectedThumbnailFile(null);
             setIsUploading(false);
         } catch (error) {
             console.error('Upload failed:', error);
