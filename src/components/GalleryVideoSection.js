@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { CldVideo } from 'next-cloudinary';
-import { ChevronLeft, ChevronRight, X, Play } from 'lucide-react';
+import { Play, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from "../../firebase/firebaseConfig";
 
@@ -11,46 +10,84 @@ export default function GalleryVideoSection() {
   const [fullscreenType, setFullscreenType] = useState(null);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-
-  // Consistent video thumbnail dimensions
-  const VIDEO_WIDTH = 450;
-  const VIDEO_HEIGHT = 300;
-  const ASPECT_RATIO = VIDEO_WIDTH / VIDEO_HEIGHT;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Fetch videos from Cloudinary and Firestore
   useEffect(() => {
     const fetchVideos = async () => {
+      setLoading(true);
       try {
         // Fetch Cloudinary videos
         const cloudinaryResponse = await axios.get('/api/videos');
         
-        // Fetch Firestore metadata to filter out archived videos
+        // Fetch only non-archived videos from Firestore
         const videosRef = collection(db, 'videos');
         const activeQuery = query(videosRef, where('isArchived', '==', false));
         const querySnapshot = await getDocs(activeQuery);
-
-        const activePublicIds = querySnapshot.docs.map(doc => doc.data().publicId);
-
-        const videosWithMetadata = cloudinaryResponse.data
-          .filter(video => activePublicIds.includes(video.public_id))
+        
+        // Create a list of non-archived publicIds
+        const activePublicIds = [];
+        querySnapshot.forEach(doc => {
+          const data = doc.data();
+          // Store both full path and just the ID part
+          activePublicIds.push(data.publicId);
+          // If it has the folder prefix, also store without prefix
+          if (data.publicId.includes('nityapriyavideos/')) {
+            activePublicIds.push(data.publicId.replace('nityapriyavideos/', ''));
+          }
+        });
+        
+        console.log('Active public IDs:', activePublicIds);
+        
+        // Map Firestore docs by publicId for easier lookup
+        const firestoreDocsMap = {};
+        querySnapshot.forEach(doc => {
+          const data = doc.data();
+          firestoreDocsMap[data.publicId] = {
+            ...data,
+            id: doc.id
+          };
+          
+          // Also store without prefix for easier matching
+          if (data.publicId.includes('nityapriyavideos/')) {
+            firestoreDocsMap[data.publicId.replace('nityapriyavideos/', '')] = {
+              ...data,
+              id: doc.id
+            };
+          }
+        });
+        
+        // Process and filter videos from Cloudinary
+        const processedVideos = cloudinaryResponse.data
+          .filter(video => {
+            // Check if this video's public_id is in our active list
+            return activePublicIds.includes(video.public_id) || 
+                   activePublicIds.includes(video.public_id.replace('nityapriyavideos/', ''));
+          })
           .map(video => {
-            const metadata = querySnapshot.docs.find(
-              doc => doc.data().publicId === video.public_id
-            )?.data();
-
+            const publicIdWithoutPrefix = video.public_id.replace('nityapriyavideos/', '');
+            const metadata = firestoreDocsMap[video.public_id] || firestoreDocsMap[publicIdWithoutPrefix];
+            
             return {
               ...video,
-              name: metadata?.name || video.original_filename,
+              name: metadata?.name || video.original_filename || 'Untitled Video',
               description: metadata?.description || '',
-              thumbnailUrl: metadata?.thumbnailUrl || video.thumbnail || video.secure_url,
+              thumbnailUrl: metadata?.thumbnailUrl || 
+                           video.thumbnail_url || 
+                           `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload/c_fill,h_300,w_450/${video.public_id}.jpg`,
               width: metadata?.width || video.width,
               height: metadata?.height || video.height
             };
           });
-
-        setVideos(videosWithMetadata);
+        
+        console.log('Processed videos (non-archived only):', processedVideos);
+        setVideos(processedVideos);
       } catch (error) {
         console.error('Error fetching videos:', error);
+        setError('Failed to load videos. Please try again later.');
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -75,6 +112,7 @@ export default function GalleryVideoSection() {
   const openFullscreenVideo = (index) => {
     setFullscreenMedia(index);
     setFullscreenType('video');
+    setCurrentVideoIndex(index);
     setIsVideoPlaying(false);
     document.body.style.overflow = 'hidden';
   };
@@ -89,6 +127,32 @@ export default function GalleryVideoSection() {
   const toggleVideoPlay = () => {
     setIsVideoPlaying(!isVideoPlaying);
   };
+
+  if (loading) {
+    return (
+      <section className="py-16 bg-gray-100" id="video-gallery">
+        <div className="max-w-7xl mx-auto px-4">
+          <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">
+            Video Gallery
+          </h2>
+          <div className="text-center text-gray-500">Loading videos...</div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="py-16 bg-gray-100" id="video-gallery">
+        <div className="max-w-7xl mx-auto px-4">
+          <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">
+            Video Gallery
+          </h2>
+          <div className="text-center text-red-500">{error}</div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-16 bg-gray-100" id="video-gallery">
@@ -195,7 +259,7 @@ export default function GalleryVideoSection() {
               >
                 {isVideoPlaying ? (
                   <video
-                    key={currentVideoIndex}
+                    key={videos[fullscreenMedia].public_id}
                     src={videos[fullscreenMedia].secure_url}
                     controls
                     autoPlay
@@ -228,41 +292,13 @@ export default function GalleryVideoSection() {
                 )}
               </div>
 
-              {/* Navigation and Video Details */}
+              {/* Video Details */}
               <div className="absolute bottom-4 left-0 right-0 flex justify-between items-center px-4">
-                {/* Previous Video Button */}
-                {/* <button 
-                  className="bg-white/70 p-2 rounded-full"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handlePrevVideo();
-                  }}
-                >
-                  <ChevronLeft />
-                </button> */}
-
-                {/* Video Details */}
                 <div className="text-center text-white flex-grow mx-4">
-                  <h3 className="text-xl font-bold">{videos[fullscreenMedia].name}</h3>
-                  <p className="text-sm">{videos[fullscreenMedia].description}</p>
+                  <h3 className="text-xl font-bold">{videos[fullscreenMedia]?.name}</h3>
+                  <p className="text-sm">{videos[fullscreenMedia]?.description}</p>
                 </div>
-
-                {/* Next Video Button */}
-                {/* <button 
-                  className="bg-white/70 p-2 rounded-full"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleNextVideo();
-                  }}
-                >
-                  <ChevronRight />
-                </button> */}
               </div>
-
-              {/* Video Counter */}
-              {/* <div className="absolute bottom-0 left-0 right-0 text-center text-white pb-2">
-                {currentVideoIndex + 1} / {videos.length}
-              </div> */}
             </div>
           </div>
         )}

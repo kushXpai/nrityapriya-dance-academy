@@ -517,7 +517,7 @@ export default function AdminVideos() {
         <div className="bg-white rounded-lg shadow">
             {/* Upload Section */}
             <div className="p-6 border-b flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-                <h3 className="font-medium text-gray-700">Video Gallery</h3>
+                <h3 className="font-medium text-gray-700">Video Gallery Management</h3>
                 <div className="flex items-center space-x-4">
                     <ViewModeToggle
                         viewMode={viewMode}
@@ -559,7 +559,7 @@ export default function AdminVideos() {
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Select Thumbnail (Optional)
+                            Select Thumbnail
                         </label>
                         <input
                             type="file"
