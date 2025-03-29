@@ -16,6 +16,7 @@ export default function AdminVideos() {
     const [videos, setVideos] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [videoName, setVideoName] = useState('');
     const [videoDescription, setVideoDescription] = useState('');
     const [isArchived, setIsArchived] = useState(false);
@@ -95,6 +96,94 @@ export default function AdminVideos() {
         setSelectedThumbnailFile(thumbnailFile);
     };
 
+    // Get Cloudinary upload signature
+    const getSignature = async (publicId) => {
+        try {
+            const response = await axios.post('/api/videos/signature', {
+                folder: 'nityapriyavideos',
+                publicId,
+                timestamp: Math.round(new Date().getTime() / 1000)
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error getting signature:', error);
+            throw error;
+        }
+    };
+
+    // Save video metadata to Firestore
+    const saveVideoMetadata = async (cloudinaryData, metadata) => {
+        try {
+            await addDoc(collection(db, 'videos'), {
+                publicId: cloudinaryData.public_id,
+                name: metadata.name,
+                description: metadata.description,
+                isArchived: metadata.isArchived,
+                thumbnailUrl: metadata.thumbnailUrl,
+                createdAt: new Date().toISOString(),
+                secure_url: cloudinaryData.secure_url
+            });
+        } catch (error) {
+            console.error('Error saving metadata:', error);
+            throw error;
+        }
+    };
+
+    // Handle direct upload to Cloudinary
+    const uploadToCloudinary = async (file, options, onProgress) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                // Get signature from your backend
+                const timestamp = Math.round(new Date().getTime() / 1000);
+                const publicId = options.publicId || `${videoName.replace(/\s+/g, '-').toLowerCase()}-${timestamp}`;
+                const signatureData = await getSignature(publicId);
+                
+                // Create form data for upload
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('api_key', signatureData.apiKey);
+                formData.append('timestamp', signatureData.timestamp);
+                formData.append('signature', signatureData.signature);
+                formData.append('folder', 'nityapriyavideos');
+                formData.append('public_id', publicId);
+                
+                if (options.resource_type) {
+                    formData.append('resource_type', options.resource_type);
+                }
+                
+                // Upload directly to Cloudinary
+                const xhr = new XMLHttpRequest();
+                const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${signatureData.cloudName}/${options.resource_type || 'image'}/upload`;
+                
+                xhr.open('POST', cloudinaryUrl, true);
+                
+                xhr.upload.onprogress = (event) => {
+                    if (event.lengthComputable) {
+                        const progress = Math.round((event.loaded / event.total) * 100);
+                        if (onProgress) onProgress(progress);
+                    }
+                };
+                
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        const response = JSON.parse(xhr.responseText);
+                        resolve(response);
+                    } else {
+                        reject(new Error(`Upload failed with status: ${xhr.status}`));
+                    }
+                };
+                
+                xhr.onerror = function() {
+                    reject(new Error('XHR error occurred during upload'));
+                };
+                
+                xhr.send(formData);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    };
+
     // Handle file upload
     const handleUpload = async () => {
         if (!selectedVideoFile) {
@@ -102,31 +191,54 @@ export default function AdminVideos() {
             return;
         }
 
-        const formData = new FormData();
-        formData.append('file', selectedVideoFile);
-
-        if (selectedThumbnailFile) {
-            formData.append('thumbnail', selectedThumbnailFile);
-        }
-
-        formData.append('name', videoName || selectedVideoFile.name);
-        formData.append('description', videoDescription);
-        formData.append('isArchived', isArchived);
-
         try {
             setIsUploading(true);
-            const response = await axios.post('/api/videos', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-
-            const newVideoEntry = {
-                ...response.data,
+            setUploadProgress(0);
+            
+            // Upload video directly to Cloudinary
+            const videoResult = await uploadToCloudinary(
+                selectedVideoFile, 
+                {
+                    resource_type: 'video',
+                    publicId: `${videoName.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`
+                },
+                (progress) => setUploadProgress(progress)
+            );
+            
+            let thumbnailUrl = null;
+            
+            // Upload thumbnail if provided
+            if (selectedThumbnailFile) {
+                const thumbnailResult = await uploadToCloudinary(
+                    selectedThumbnailFile,
+                    {
+                        resource_type: 'image',
+                        publicId: `${videoName.replace(/\s+/g, '-').toLowerCase()}-thumbnail-${Date.now()}`
+                    }
+                );
+                thumbnailUrl = thumbnailResult.secure_url;
+            }
+            
+            // Save metadata to Firestore
+            const metadata = {
                 name: videoName || selectedVideoFile.name,
                 description: videoDescription,
                 isArchived: isArchived,
-                thumbnailUrl: response.data.thumbnailUrl || null
+                thumbnailUrl: thumbnailUrl
             };
-
+            
+            await saveVideoMetadata(videoResult, metadata);
+            
+            // Add new video to state
+            const newVideoEntry = {
+                ...videoResult,
+                name: videoName || selectedVideoFile.name,
+                description: videoDescription,
+                isArchived: isArchived,
+                thumbnailUrl: thumbnailUrl,
+                metadata: metadata
+            };
+            
             setVideos(prevVideos => [newVideoEntry, ...prevVideos]);
             
             // Reset form
@@ -135,10 +247,12 @@ export default function AdminVideos() {
             setIsArchived(false);
             setSelectedVideoFile(null);
             setSelectedThumbnailFile(null);
-            setIsUploading(false);
+            setUploadProgress(0);
+            
         } catch (error) {
             console.error('Upload failed:', error);
             alert(`Upload failed: ${error.message}`);
+        } finally {
             setIsUploading(false);
         }
     };
@@ -250,6 +364,7 @@ export default function AdminVideos() {
 
     // Render videos
     const renderVideos = () => {
+        // (Same as your original code)
         const renderThumbnail = (video) => {
             // Priority: Use thumbnailUrl from Cloudinary, then generated thumbnail, then fallback to video source
             const thumbnailSrc =
@@ -402,7 +517,7 @@ export default function AdminVideos() {
         <div className="bg-white rounded-lg shadow">
             {/* Upload Section */}
             <div className="p-6 border-b flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-                <h3 className="font-medium text-gray-700">Video Gallery Management</h3>
+                <h3 className="font-medium text-gray-700">Video Gallery</h3>
                 <div className="flex items-center space-x-4">
                     <ViewModeToggle
                         viewMode={viewMode}
@@ -455,6 +570,20 @@ export default function AdminVideos() {
                         />
                     </div>
                 </div>
+                
+                {/* Progress bar */}
+                {isUploading && (
+                    <div className="mt-4">
+                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div 
+                                className="bg-blue-600 h-2.5 rounded-full" 
+                                style={{ width: `${uploadProgress}%` }}
+                            ></div>
+                        </div>
+                        <p className="text-xs text-center mt-1">{uploadProgress}% uploaded</p>
+                    </div>
+                )}
+                
                 <div className="mt-4">
                     <button
                         onClick={handleUpload}
@@ -465,7 +594,7 @@ export default function AdminVideos() {
                             }`}
                         disabled={!selectedVideoFile || isUploading}
                     >
-                        {isUploading ? 'Uploading...' : '+ Upload Video'}
+                        {isUploading ? `Uploading... ${uploadProgress}%` : '+ Upload Video'}
                     </button>
                 </div>
             </div>
