@@ -18,79 +18,34 @@ export default function GalleryVideoSection() {
     const fetchVideos = async () => {
       setLoading(true);
       try {
-        // Fetch Cloudinary videos
+        // Fetch videos from the API
         const cloudinaryResponse = await axios.get('/api/videos');
         
-        // Fetch only non-archived videos from Firestore
-        const videosRef = collection(db, 'videos');
-        const activeQuery = query(videosRef, where('isArchived', '==', false));
-        const querySnapshot = await getDocs(activeQuery);
-        
-        // Create a list of non-archived publicIds
-        const activePublicIds = [];
-        querySnapshot.forEach(doc => {
-          const data = doc.data();
-          // Store both full path and just the ID part
-          activePublicIds.push(data.publicId);
-          // If it has the folder prefix, also store without prefix
-          if (data.publicId.includes('nityapriyavideos/')) {
-            activePublicIds.push(data.publicId.replace('nityapriyavideos/', ''));
-          }
-        });
-        
-        console.log('Active public IDs:', activePublicIds);
-        
-        // Map Firestore docs by publicId for easier lookup
-        const firestoreDocsMap = {};
-        querySnapshot.forEach(doc => {
-          const data = doc.data();
-          firestoreDocsMap[data.publicId] = {
-            ...data,
-            id: doc.id
-          };
-          
-          // Also store without prefix for easier matching
-          if (data.publicId.includes('nityapriyavideos/')) {
-            firestoreDocsMap[data.publicId.replace('nityapriyavideos/', '')] = {
-              ...data,
-              id: doc.id
-            };
-          }
-        });
-        
-        // Process and filter videos from Cloudinary
+        // Process videos similar to admin side
         const processedVideos = cloudinaryResponse.data
-          .filter(video => {
-            // Check if this video's public_id is in our active list
-            return activePublicIds.includes(video.public_id) || 
-                   activePublicIds.includes(video.public_id.replace('nityapriyavideos/', ''));
-          })
-          .map(video => {
-            const publicIdWithoutPrefix = video.public_id.replace('nityapriyavideos/', '');
-            const metadata = firestoreDocsMap[video.public_id] || firestoreDocsMap[publicIdWithoutPrefix];
-            
-            return {
-              ...video,
-              name: metadata?.name || video.original_filename || 'Untitled Video',
-              description: metadata?.description || '',
-              thumbnailUrl: metadata?.thumbnailUrl || 
-                           video.thumbnail_url || 
-                           `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload/c_fill,h_300,w_450/${video.public_id}.jpg`,
-              width: metadata?.width || video.width,
-              height: metadata?.height || video.height
-            };
-          });
+          .filter(video => !video.metadata?.isArchived) // Filter out archived videos
+          .map(video => ({
+            ...video,
+            name: video.metadata?.name || video.original_filename || 'Untitled Video',
+            description: video.metadata?.description || '',
+            thumbnailUrl: video.metadata?.thumbnailUrl ||
+                         video.thumbnail_url ||
+                         `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload/c_fill,h_300,w_450/${video.public_id}.jpg`,
+            width: video.width,
+            height: video.height
+          }));
         
         console.log('Processed videos (non-archived only):', processedVideos);
         setVideos(processedVideos);
       } catch (error) {
         console.error('Error fetching videos:', error);
-        setError('Failed to load videos. Please try again later.');
+        console.error('Error details:', error.response?.data || error.message);
+        setError(`Failed to load videos: ${error.response?.data?.error || error.message}`);
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchVideos();
   }, []);
 
