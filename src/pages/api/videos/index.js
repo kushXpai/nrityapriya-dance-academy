@@ -6,8 +6,7 @@ import { db } from "../../../../firebase/firebaseConfig";
 export const config = {
   api: {
     bodyParser: false,
-    responseLimit: '100mb',
-    sizeLimit: '100mb',
+    responseLimit: false,
   },
 };
 
@@ -36,7 +35,7 @@ async function handleUploadVideo(req, res) {
   form.parse(req, async (err, fields, files) => {
     if (err) {
       console.error('Form parse error:', err);
-      return res.status(500).json({ error: 'Error parsing form data' });
+      return res.status(500).json({ error: 'Error parsing form data', details: err.message });
     }
 
     try {
@@ -89,9 +88,11 @@ async function handleUploadVideo(req, res) {
       res.status(200).json(enhancedResult);
     } catch (uploadError) {
       console.error('Cloudinary Upload Error:', uploadError);
+      console.error('Error Stack:', uploadError.stack);
       res.status(500).json({
         error: 'Upload to Cloudinary failed',
-        details: uploadError.message
+        details: uploadError.message,
+        stack: process.env.NODE_ENV === 'development' ? uploadError.stack : undefined
       });
     }
   });

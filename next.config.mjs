@@ -12,7 +12,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Content-Length',
-            value: '100MB', // Adjust as needed
+            value: '100MB',
           },
         ],
       },
