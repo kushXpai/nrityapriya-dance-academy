@@ -23,24 +23,24 @@ export default function GalleryVideoSection() {
       try {
         // Log the request to verify
         console.log('Fetching videos from Supabase');
-
+        
         const { data, error } = await supabase
           .from("videos")
           .select("*")
           .order("created_at", { ascending: false });
-
+        
         if (error) throw error;
-
+        
         // Log the raw response to see its structure
         console.log('Raw Supabase response:', data);
-
+        
         if (!Array.isArray(data)) {
           console.error('Supabase did not return an array:', data);
           setError('Unexpected response format');
           setLoading(false);
           return;
         }
-
+        
         // Process videos similar to admin side
         const processedVideos = data.map(video => ({
           public_id: video.id,
@@ -51,12 +51,12 @@ export default function GalleryVideoSection() {
           width: video.width || 1280,
           height: video.height || 720
         }));
-
+        
         console.log('Processed videos:', processedVideos);
         setVideos(processedVideos);
       } catch (error) {
         console.error('Error fetching videos:', error);
-
+        
         // More detailed error logging
         if (error.response) {
           console.error('Error response data:', error.response.data);
@@ -71,20 +71,20 @@ export default function GalleryVideoSection() {
         setLoading(false);
       }
     };
-
+  
     fetchVideos();
   }, []);
 
   // Video navigation handlers
   const handlePrevVideo = () => {
-    setCurrentVideoIndex(prev =>
+    setCurrentVideoIndex(prev => 
       prev === 0 ? videos.length - 1 : prev - 1
     );
     setIsVideoPlaying(false);
   };
 
   const handleNextVideo = () => {
-    setCurrentVideoIndex(prev =>
+    setCurrentVideoIndex(prev => 
       prev === videos.length - 1 ? 0 : prev + 1
     );
     setIsVideoPlaying(false);
@@ -146,8 +146,8 @@ export default function GalleryVideoSection() {
           <div className="text-center text-gray-500">No videos available</div>
         ) : (
           <>
-            {/* Desktop & Tablet Grid View for Videos */}
-            <div className="hidden md:grid grid-cols-2 md:grid-cols-3 gap-4">
+            {/* Responsive Grid View for Videos */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {videos.map((video, index) => (
                 <div
                   key={video.public_id}
@@ -158,7 +158,7 @@ export default function GalleryVideoSection() {
                     src={video.thumbnailUrl}
                     alt={video.name || 'Gallery video'}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    style={{
+                    style={{ 
                       transform: 'rotate(0deg)',
                       objectPosition: 'center'
                     }}
@@ -169,74 +169,18 @@ export default function GalleryVideoSection() {
                 </div>
               ))}
             </div>
-
-            {/* Mobile View (Single Column Slider) */}
-
-            <div className="md:hidden mt-8">
-              <div className="text-xs text-gray-400 mb-2">Found: {videos.length} videos</div>
-              {videos.length === 0 ? (
-                <div className="text-center text-gray-500">No videos available</div>
-              ) : (
-                <div className="relative">
-                  <div
-                    className="w-full aspect-[16/9] overflow-hidden rounded-lg"
-                    onClick={() => openFullscreenVideo(currentVideoIndex)}
-                  >
-                    <img
-                      src={videos[currentVideoIndex].thumbnailUrl}
-                      alt={videos[currentVideoIndex].name || 'Gallery video'}
-                      className="absolute inset-0 w-full h-full object-cover"
-                      style={{
-                        transform: 'rotate(0deg)',
-                        objectPosition: 'center'
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
-                      <Play className="w-12 h-12 text-white" />
-                    </div>
-                  </div>
-
-                  {/* Navigation Buttons */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePrevVideo();
-                    }}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/70 p-2 rounded-full shadow-md hover:bg-white"
-                    aria-label="Previous video"
-                  >
-                    <ChevronLeft className="w-6 h-6" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleNextVideo();
-                    }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/70 p-2 rounded-full shadow-md hover:bg-white"
-                    aria-label="Next video"
-                  >
-                    <ChevronRight className="w-6 h-6" />
-                  </button>
-
-                  {/* Video Counter */}
-                  <div className="mt-4 text-center text-gray-600">
-                    {currentVideoIndex + 1} / {videos.length}
-                  </div>
-                </div>
-              )}
-            </div>
           </>
         )}
 
         {/* Fullscreen Modal for Videos */}
         {fullscreenType === 'video' && fullscreenMedia !== null && (
-          <div
+          <div 
             className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center"
             onClick={closeFullscreen}
           >
             <div className="relative w-full h-full max-w-7xl mx-auto p-4 flex flex-col">
               {/* Close Button */}
-              <button
+              <button 
                 className="absolute top-4 right-4 bg-white/70 p-2 rounded-full z-10"
                 onClick={closeFullscreen}
               >
@@ -244,7 +188,7 @@ export default function GalleryVideoSection() {
               </button>
 
               {/* Video Container */}
-              <div
+              <div 
                 className="flex-grow flex items-center justify-center relative"
                 onClick={(e) => e.stopPropagation()}
               >
@@ -273,7 +217,7 @@ export default function GalleryVideoSection() {
                         maxHeight: '85vh'
                       }}
                     />
-                    <button
+                    <button 
                       className="absolute inset-0 flex items-center justify-center"
                       onClick={toggleVideoPlay}
                     >
