@@ -5,7 +5,9 @@ import {
   where, 
   getDocs, 
   updateDoc, 
-  doc
+  doc,
+  deleteDoc,
+  addDoc
 } from 'firebase/firestore';
 import { db } from '../../firebase/firebaseConfig';
 
@@ -15,7 +17,7 @@ const REVIEW_STATUSES = {
     label: 'Unreviewed', 
     color: 'bg-yellow-100 text-yellow-800' 
   },
-  'in progress': { 
+  inprogress: { 
     label: 'In Progress', 
     color: 'bg-blue-100 text-blue-800' 
   },
@@ -47,7 +49,7 @@ export default function AdminStudents() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('inquired');
 
-  // All previous fetch methods remain the same...
+  // Modified fetch methods
   const fetchStudentInquiries = async () => {
     try {
       setLoading(true);
@@ -94,18 +96,9 @@ export default function AdminStudents() {
 
   const fetchEnrolledStudents = async () => {
     try {
-      const enrolledFromInquiries = query(
-        collection(db, "student_inquiries"), 
-        where("review", "==", "completed"),
-        where("status", "==", "enrolled")
-      );
-      const inquirySnapshot = await getDocs(enrolledFromInquiries);
+      // We're no longer querying for enrolled students from student_inquiries
+      // since they should be moved to the students collection
       
-      const inquiryStudents = inquirySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-
       const existingEnrolled = query(collection(db, "students"));
       const existingSnapshot = await getDocs(existingEnrolled);
       
@@ -114,18 +107,30 @@ export default function AdminStudents() {
         ...doc.data()
       }));
       
-      setEnrolledStudents([...inquiryStudents, ...existingStudents]);
+      setEnrolledStudents(existingStudents);
     } catch (error) {
       console.error("Error fetching enrolled students:", error);
     }
   };
 
-  // Previous status update methods remain the same...
+  // Modified update methods to handle the data transfer
   const updateReviewStatus = async (studentId, newStatus) => {
     try {
       const studentRef = doc(db, "student_inquiries", studentId);
+      
+      // Get the current student data
+      const studentDoc = await getDocs(query(collection(db, "student_inquiries"), where("__name__", "==", studentId)));
+      const studentData = studentDoc.docs[0]?.data();
+      
       await updateDoc(studentRef, { review: newStatus });
       
+      // If status is now completed and enrollment is set to enrolled,
+      // move the student to the students collection
+      if (newStatus === "completed" && studentData?.status === "enrolled") {
+        await moveStudentToEnrolled(studentId, studentData);
+      }
+      
+      // Refresh all lists
       fetchStudentInquiries();
       fetchNotEnrolledStudents();
       fetchEnrolledStudents();
@@ -138,13 +143,46 @@ export default function AdminStudents() {
     try {
       const studentRef = doc(db, "student_inquiries", studentId);
       
+      // Get the current student data
+      const studentDoc = await getDocs(query(collection(db, "student_inquiries"), where("__name__", "==", studentId)));
+      const studentData = studentDoc.docs[0]?.data();
+      
       await updateDoc(studentRef, { status: newStatus });
       
+      // If review is already completed and we're setting status to enrolled,
+      // move the student to the students collection
+      if (studentData?.review === "completed" && newStatus === "enrolled") {
+        // Get the updated student data with the new status
+        const updatedStudentDoc = await getDocs(query(collection(db, "student_inquiries"), where("__name__", "==", studentId)));
+        const updatedStudentData = updatedStudentDoc.docs[0]?.data();
+        
+        await moveStudentToEnrolled(studentId, updatedStudentData);
+      }
+      
+      // Refresh all lists
       fetchStudentInquiries();
       fetchNotEnrolledStudents();
       fetchEnrolledStudents();
     } catch (error) {
       console.error("Error updating enrollment status:", error);
+    }
+  };
+
+  // New function to move a student from inquiries to enrolled
+  const moveStudentToEnrolled = async (studentId, studentData) => {
+    try {
+      // Add to students collection
+      await addDoc(collection(db, "students"), {
+        ...studentData,
+        inquiryId: studentId // Keep reference to original inquiry ID
+      });
+      
+      // Delete from student_inquiries collection
+      await deleteDoc(doc(db, "student_inquiries", studentId));
+      
+      console.log("Student moved to enrolled collection successfully");
+    } catch (error) {
+      console.error("Error moving student to enrolled collection:", error);
     }
   };
 

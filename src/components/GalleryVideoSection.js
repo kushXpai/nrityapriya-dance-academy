@@ -172,7 +172,8 @@ export default function GalleryVideoSection() {
 
             {/* Mobile View (Single Column Slider) */}
             <div className="md:hidden mt-8">
-              {videos.length > 0 && (
+              {/* Fixed: Ensuring videos.length check is consistent for mobile view */}
+              {videos && videos.length > 0 ? (
                 <div className="relative">
                   <div 
                     className="w-full aspect-[16/9] overflow-hidden rounded-lg"
@@ -194,14 +195,20 @@ export default function GalleryVideoSection() {
 
                   {/* Navigation Buttons */}
                   <button
-                    onClick={handlePrevVideo}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePrevVideo();
+                    }}
                     className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/70 p-2 rounded-full shadow-md hover:bg-white"
                     aria-label="Previous video"
                   >
                     <ChevronLeft className="w-6 h-6" />
                   </button>
                   <button
-                    onClick={handleNextVideo}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleNextVideo();
+                    }}
                     className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/70 p-2 rounded-full shadow-md hover:bg-white"
                     aria-label="Next video"
                   >
@@ -213,6 +220,8 @@ export default function GalleryVideoSection() {
                     {currentVideoIndex + 1} / {videos.length}
                   </div>
                 </div>
+              ) : (
+                <div className="text-center text-gray-500">No videos available</div>
               )}
             </div>
           </>
