@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { signOut, onAuthStateChanged } from "firebase/auth";
+import { createClient } from "@supabase/supabase-js";
 import { auth } from "../../firebase/firebaseConfig";
 import Link from "next/link";
 import AdminProfile from "@/components/AdminProfile";
@@ -9,6 +10,10 @@ import AdminPhotos from "@/components/AdminPhotos";
 import AdminVideos from "@/components/AdminVideos";
 import AdminTestimonials from "@/components/AdminTestimonials";
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
 export default function AdminHome() {
   const [user, setUser] = useState(null);
   const [activeSection, setActiveSection] = useState("profile");
@@ -16,19 +21,34 @@ export default function AdminHome() {
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (!currentUser) {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) {
         router.push("/admin");
       } else {
-        setUser(currentUser);
+        setUser(data.user);
       }
-    });
-
-    return () => unsubscribe();
+    };
+    
+    getUser();
+    
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === "SIGNED_OUT") {
+          router.push("/admin");
+        } else if (session?.user) {
+          setUser(session.user);
+        }
+      }
+    );
+    
+    return () => {
+      authListener?.subscription?.unsubscribe();
+    };
   }, [router]);
 
   const handleLogout = async () => {
-    await signOut(auth);
+    await supabase.auth.signOut();
     router.push("/admin");
   };
 

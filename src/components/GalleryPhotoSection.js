@@ -1,45 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { CldImage } from 'next-cloudinary';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from "../../firebase/firebaseConfig";
-import axios from 'axios';
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize Supabase client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function GalleryPhotoSection() {
   const [photos, setPhotos] = useState([]);
   const [fullscreenMedia, setFullscreenMedia] = useState(null);
   const [fullscreenType, setFullscreenType] = useState(null);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch photos from Cloudinary and Firestore
+  // Fetch photos from Supabase
   useEffect(() => {
     const fetchPhotos = async () => {
+      setIsLoading(true);
       try {
-        const cloudinaryResponse = await axios.get('/api/photos');
-        
-        const photosRef = collection(db, 'photos');
-        const archivedQuery = query(photosRef, where('isArchived', '==', false));
-        const querySnapshot = await getDocs(archivedQuery);
+        const { data, error } = await supabase
+          .from('photos')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-        const archivedPublicIds = querySnapshot.docs.map(doc => doc.data().publicId);
-
-        const photosWithMetadata = cloudinaryResponse.data
-          .filter(photo => archivedPublicIds.includes(photo.public_id))
-          .map(photo => {
-            const metadata = querySnapshot.docs.find(
-              doc => doc.data().publicId === photo.public_id
-            )?.data();
-
-            return {
-              ...photo,
-              name: metadata?.name || photo.original_filename,
-              description: metadata?.description || ''
-            };
-          });
-
-        setPhotos(photosWithMetadata);
+        if (error) throw error;
+        setPhotos(data || []);
       } catch (error) {
-        console.error('Error fetching photos:', error);
+        console.error('Error fetching photos:', error.message);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -78,7 +68,11 @@ export default function GalleryPhotoSection() {
           Photo Gallery
         </h2>
 
-        {photos.length === 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="w-12 h-12 border-4 border-t-gray-800 border-r-gray-800 border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : photos.length === 0 ? (
           <div className="text-center text-gray-500">No photos available</div>
         ) : (
           <>
@@ -86,14 +80,13 @@ export default function GalleryPhotoSection() {
             <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-4">
               {photos.map((photo, index) => (
                 <div
-                  key={photo.public_id}
+                  key={photo.id}
                   className="relative w-full aspect-[2/3] overflow-hidden rounded-lg cursor-pointer"
                   onClick={() => openFullscreenPhoto(index)}
                 >
-                  <CldImage
-                    width={300}
-                    height={450}
-                    src={photo.public_id}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={photo.photo_url}
                     alt={photo.name || 'Gallery photo'}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                   />
@@ -109,10 +102,9 @@ export default function GalleryPhotoSection() {
                     className="w-full aspect-[2/3] overflow-hidden rounded-lg cursor-pointer"
                     onClick={() => openFullscreenPhoto(currentPhotoIndex)}
                   >
-                    <CldImage
-                      width={300}
-                      height={450}
-                      src={photos[currentPhotoIndex].public_id}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={photos[currentPhotoIndex].photo_url}
                       alt={photos[currentPhotoIndex].name || 'Gallery photo'}
                       className="absolute inset-0 w-full h-full object-cover"
                     />
@@ -152,13 +144,21 @@ export default function GalleryPhotoSection() {
           >
             <div className="relative max-w-4xl max-h-screen p-2 md:p-4">
               <div className="relative max-w-full max-h-[85vh]" onClick={(e) => e.stopPropagation()}>
-                <CldImage
-                  width="800"
-                  height="1200"
-                  src={photos[fullscreenMedia].public_id}
-                  alt={photos[fullscreenMedia].name || 'Fullscreen photo'}
-                  className="max-w-full max-h-[85vh] object-contain"
-                />
+                <div className="relative w-full h-full flex justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={photos[fullscreenMedia].photo_url}
+                    alt={photos[fullscreenMedia].name || 'Fullscreen photo'}
+                    className="max-w-full max-h-[85vh] object-contain"
+                  />
+                </div>
+                
+                {photos[fullscreenMedia].description && (
+                  <div className="bg-black/70 text-white p-2 mt-2 rounded">
+                    <h3 className="font-medium">{photos[fullscreenMedia].name}</h3>
+                    <p className="text-sm mt-1">{photos[fullscreenMedia].description}</p>
+                  </div>
+                )}
               </div>
               
               <button 

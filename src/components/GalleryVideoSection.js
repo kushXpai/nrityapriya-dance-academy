@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { createClient } from "@supabase/supabase-js";
 import { Play, ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from "../../firebase/firebaseConfig";
+
+// Initialize Supabase client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function GalleryVideoSection() {
   const [videos, setVideos] = useState([]);
@@ -13,34 +16,57 @@ export default function GalleryVideoSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch videos from Cloudinary and Firestore
+  // Fetch videos from Supabase
   useEffect(() => {
     const fetchVideos = async () => {
       setLoading(true);
       try {
-        // Fetch videos from the API
-        const cloudinaryResponse = await axios.get('/api/videos');
+        // Log the request to verify
+        console.log('Fetching videos from Supabase');
+        
+        const { data, error } = await supabase
+          .from("videos")
+          .select("*")
+          .order("created_at", { ascending: false });
+        
+        if (error) throw error;
+        
+        // Log the raw response to see its structure
+        console.log('Raw Supabase response:', data);
+        
+        if (!Array.isArray(data)) {
+          console.error('Supabase did not return an array:', data);
+          setError('Unexpected response format');
+          setLoading(false);
+          return;
+        }
         
         // Process videos similar to admin side
-        const processedVideos = cloudinaryResponse.data
-          .filter(video => !video.metadata?.isArchived) // Filter out archived videos
-          .map(video => ({
-            ...video,
-            name: video.metadata?.name || video.original_filename || 'Untitled Video',
-            description: video.metadata?.description || '',
-            thumbnailUrl: video.metadata?.thumbnailUrl ||
-                         video.thumbnail_url ||
-                         `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload/c_fill,h_300,w_450/${video.public_id}.jpg`,
-            width: video.width,
-            height: video.height
-          }));
+        const processedVideos = data.map(video => ({
+          public_id: video.id,
+          name: video.name || 'Untitled Video',
+          description: video.description || '',
+          thumbnailUrl: video.thumbnail_url || '/placeholder-thumbnail.jpg',
+          secure_url: video.video_url,
+          width: video.width || 1280,
+          height: video.height || 720
+        }));
         
-        console.log('Processed videos (non-archived only):', processedVideos);
+        console.log('Processed videos:', processedVideos);
         setVideos(processedVideos);
       } catch (error) {
         console.error('Error fetching videos:', error);
-        console.error('Error details:', error.response?.data || error.message);
-        setError(`Failed to load videos: ${error.response?.data?.error || error.message}`);
+        
+        // More detailed error logging
+        if (error.response) {
+          console.error('Error response data:', error.response.data);
+          console.error('Error response status:', error.response.status);
+          console.error('Error response headers:', error.response.headers);
+          setError(`Error ${error.response.status}: ${JSON.stringify(error.response.data)}`);
+        } else {
+          console.error('Error message:', error.message);
+          setError(`Error: ${error.message}`);
+        }
       } finally {
         setLoading(false);
       }
