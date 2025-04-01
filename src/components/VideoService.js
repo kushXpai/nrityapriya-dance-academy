@@ -36,7 +36,6 @@ export const uploadFileToS3 = async (file, key, contentType) => {
       Key: key,
       Body: arrayBuffer,
       ContentType: contentType,
-      ACL: "public-read" // This makes each object public upon upload
     };
   
     await s3Client.send(new PutObjectCommand(params));
