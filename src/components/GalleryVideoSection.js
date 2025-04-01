@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { createClient } from "@supabase/supabase-js";
 import { Play, ChevronLeft, ChevronRight, X } from 'lucide-react';
-
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { getAllVideos } from "./VideoService";
 
 export default function GalleryVideoSection() {
   const [videos, setVideos] = useState([]);
@@ -16,32 +11,26 @@ export default function GalleryVideoSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch videos from Supabase
+  // Fetch videos from DynamoDB
   useEffect(() => {
     const fetchVideos = async () => {
+      console.log("Fetching videos...");
+      
       setLoading(true);
       try {
-        // Log the request to verify
-        console.log('Fetching videos from Supabase');
+        // Get all non-archived videos (false = don't include archived)
+        const data = await getAllVideos(false);
         
-        const { data, error } = await supabase
-          .from("videos")
-          .select("*")
-          .order("created_at", { ascending: false });
-        
-        if (error) throw error;
-        
-        // Log the raw response to see its structure
-        console.log('Raw Supabase response:', data);
-        
+        console.log('Raw response:', data);
+
         if (!Array.isArray(data)) {
-          console.error('Supabase did not return an array:', data);
+          console.error('Did not return an array:', data);
           setError('Unexpected response format');
           setLoading(false);
           return;
         }
-        
-        // Process videos similar to admin side
+
+        // Process videos to match the expected format
         const processedVideos = data.map(video => ({
           public_id: video.id,
           name: video.name || 'Untitled Video',
@@ -51,12 +40,12 @@ export default function GalleryVideoSection() {
           width: video.width || 1280,
           height: video.height || 720
         }));
-        
+
         console.log('Processed videos:', processedVideos);
         setVideos(processedVideos);
       } catch (error) {
         console.error('Error fetching videos:', error);
-        
+
         // More detailed error logging
         if (error.response) {
           console.error('Error response data:', error.response.data);
@@ -71,20 +60,21 @@ export default function GalleryVideoSection() {
         setLoading(false);
       }
     };
-  
+    
+    console.log("useEffect triggered, fetching videos...");
     fetchVideos();
   }, []);
 
   // Video navigation handlers
   const handlePrevVideo = () => {
-    setCurrentVideoIndex(prev => 
+    setCurrentVideoIndex(prev =>
       prev === 0 ? videos.length - 1 : prev - 1
     );
     setIsVideoPlaying(false);
   };
 
   const handleNextVideo = () => {
-    setCurrentVideoIndex(prev => 
+    setCurrentVideoIndex(prev =>
       prev === videos.length - 1 ? 0 : prev + 1
     );
     setIsVideoPlaying(false);
@@ -158,7 +148,7 @@ export default function GalleryVideoSection() {
                     src={video.thumbnailUrl}
                     alt={video.name || 'Gallery video'}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    style={{ 
+                    style={{
                       transform: 'rotate(0deg)',
                       objectPosition: 'center'
                     }}
@@ -174,13 +164,13 @@ export default function GalleryVideoSection() {
 
         {/* Fullscreen Modal for Videos */}
         {fullscreenType === 'video' && fullscreenMedia !== null && (
-          <div 
+          <div
             className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center"
             onClick={closeFullscreen}
           >
             <div className="relative w-full h-full max-w-7xl mx-auto p-4 flex flex-col">
               {/* Close Button */}
-              <button 
+              <button
                 className="absolute top-4 right-4 bg-white/70 p-2 rounded-full z-10"
                 onClick={closeFullscreen}
               >
@@ -188,7 +178,7 @@ export default function GalleryVideoSection() {
               </button>
 
               {/* Video Container */}
-              <div 
+              <div
                 className="flex-grow flex items-center justify-center relative"
                 onClick={(e) => e.stopPropagation()}
               >
@@ -217,7 +207,7 @@ export default function GalleryVideoSection() {
                         maxHeight: '85vh'
                       }}
                     />
-                    <button 
+                    <button
                       className="absolute inset-0 flex items-center justify-center"
                       onClick={toggleVideoPlay}
                     >
@@ -226,6 +216,30 @@ export default function GalleryVideoSection() {
                   </div>
                 )}
               </div>
+
+              {/* Navigation Controls */}
+              {videos.length > 1 && (
+                <>
+                  <button
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/70 p-2 rounded-full"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePrevVideo();
+                    }}
+                  >
+                    <ChevronLeft size={24} />
+                  </button>
+                  <button
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/70 p-2 rounded-full"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleNextVideo();
+                    }}
+                  >
+                    <ChevronRight size={24} />
+                  </button>
+                </>
+              )}
 
               {/* Video Details */}
               <div className="absolute bottom-4 left-0 right-0 flex justify-between items-center px-4">
