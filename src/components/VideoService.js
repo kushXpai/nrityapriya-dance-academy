@@ -149,3 +149,22 @@ export const updateVideoArchiveStatus = async (id, archived) => {
     const { Attributes } = await docClient.send(new UpdateCommand(params));
     return Attributes;
 };
+
+export const updateVideoDetails = async (id, updates) => {
+    const params = {
+        TableName: DYNAMODB_TABLE_NAME,
+        Key: { id },
+        UpdateExpression: "set #name = :name, description = :description",
+        ExpressionAttributeNames: {
+            "#name": "name", // Using ExpressionAttributeNames because 'name' is a reserved word
+        },
+        ExpressionAttributeValues: {
+            ":name": updates.name,
+            ":description": updates.description,
+        },
+        ReturnValues: "ALL_NEW",
+    };
+
+    const { Attributes } = await docClient.send(new UpdateCommand(params));
+    return Attributes;
+};

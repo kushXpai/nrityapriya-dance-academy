@@ -20,6 +20,12 @@ export default function AdminPhotos() {
     // Photos collection state
     const [photos, setPhotos] = useState([]);
     const [isLoadingPhotos, setIsLoadingPhotos] = useState(true);
+    
+    // Edit state
+    const [editMode, setEditMode] = useState(false);
+    const [editingPhoto, setEditingPhoto] = useState(null);
+    const [editName, setEditName] = useState("");
+    const [editDescription, setEditDescription] = useState("");
 
     const router = useRouter();
 
@@ -180,13 +186,142 @@ export default function AdminPhotos() {
         }
     };
 
+    // Start editing a photo
+    const handleStartEdit = (photo) => {
+        setEditMode(true);
+        setEditingPhoto(photo);
+        setEditName(photo.name);
+        setEditDescription(photo.description);
+    };
+
+    // Cancel editing
+    const handleCancelEdit = () => {
+        setEditMode(false);
+        setEditingPhoto(null);
+        setEditName("");
+        setEditDescription("");
+    };
+
+    // Save photo edits
+    const handleSaveEdit = async () => {
+        if (!editName || !editDescription) {
+            setMessage({
+                text: "Please fill in both name and description fields.",
+                type: "error",
+            });
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const { error } = await supabase
+                .from("photos")
+                .update({
+                    name: editName,
+                    description: editDescription,
+                    created_at: new Date(),
+                })
+                .eq("id", editingPhoto.id);
+
+            if (error) throw error;
+
+            setMessage({
+                text: "Photo details updated successfully!",
+                type: "success",
+            });
+
+            // Reset edit state
+            setEditMode(false);
+            setEditingPhoto(null);
+            setEditName("");
+            setEditDescription("");
+
+            // Refresh photos
+            fetchPhotos();
+        } catch (error) {
+            console.error("Error updating photo:", error.message);
+            setMessage({
+                text: `Failed to update photo: ${error.message}`,
+                type: "error",
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
         <div className="space-y-8">
+            {/* Edit Modal */}
+            {editMode && editingPhoto && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-lg shadow-lg max-w-lg w-full">
+                        <div className="p-6">
+                            <h3 className="text-lg font-medium text-gray-900 mb-4">Edit Photo Details</h3>
+                            
+                            {message.text && (
+                                <div
+                                    className={`p-4 mb-4 rounded-md ${message.type === "success" ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"}`}
+                                >
+                                    {message.text}
+                                </div>
+                            )}
+                            
+                            <div className="space-y-4">
+                                <div>
+                                    <label htmlFor="editName" className="block text-sm font-medium text-black mb-1">
+                                        Photo Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="editName"
+                                        value={editName}
+                                        onChange={(e) => setEditName(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#EE3224] text-black"
+                                        placeholder="Enter photo title"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="editDescription" className="block text-sm font-medium text-black mb-1">
+                                        Description
+                                    </label>
+                                    <textarea
+                                        id="editDescription"
+                                        value={editDescription}
+                                        onChange={(e) => setEditDescription(e.target.value)}
+                                        rows="3"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#EE3224] text-black"
+                                        placeholder="Enter photo description"
+                                    ></textarea>
+                                </div>
+
+                                <div className="flex justify-end space-x-2 pt-4">
+                                    <button
+                                        onClick={handleCancelEdit}
+                                        className="px-4 py-2 font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300"
+                                        disabled={isLoading}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleSaveEdit}
+                                        disabled={isLoading}
+                                        className={`px-4 py-2 font-medium rounded-md text-white ${isLoading ? "bg-gray-400" : "bg-[#EE3224] hover:bg-red-700"} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#EE3224]`}
+                                    >
+                                        {isLoading ? "Saving..." : "Save Changes"}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Upload Form */}
             <div className="bg-white rounded-lg shadow-md p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Upload New Photo</h3>
 
-                {message.text && (
+                {!editMode && message.text && (
                     <div
                         className={`p-4 mb-4 rounded-md ${message.type === "success" ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
                             }`}
@@ -311,7 +446,7 @@ export default function AdminPhotos() {
                                                     href={photo.photo_url}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="bg-[#EE3224] text-white p-2 rounded-full hover:bg-red-700"
+                                                    className="bg-[#EE3224] text-white p-2 rounded-full hover:bg-red-700 mx-1"
                                                 >
                                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -325,13 +460,22 @@ export default function AdminPhotos() {
                                             <p className="text-sm text-gray-500 mb-2 line-clamp-2">{photo.description}</p>
                                             <div className="flex items-center justify-between text-sm text-gray-500">
                                                 <span>{formatDate(photo.created_at)}</span>
-                                                <button
-                                                    onClick={() => handleDeletePhoto(photo.id, photo.photo_url)}
-                                                    className="text-red-500 hover:text-red-700"
-                                                    disabled={isLoading}
-                                                >
-                                                    Delete
-                                                </button>
+                                                <div className="flex space-x-2">
+                                                    <button
+                                                        onClick={() => handleStartEdit(photo)}
+                                                        className="text-blue-500 hover:text-blue-700"
+                                                        disabled={isLoading || editMode}
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeletePhoto(photo.id, photo.photo_url)}
+                                                        className="text-red-500 hover:text-red-700"
+                                                        disabled={isLoading || editMode}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -364,9 +508,16 @@ export default function AdminPhotos() {
                                                         View
                                                     </a>
                                                     <button
+                                                        onClick={() => handleStartEdit(photo)}
+                                                        className="text-blue-500 hover:text-blue-700"
+                                                        disabled={isLoading || editMode}
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <button
                                                         onClick={() => handleDeletePhoto(photo.id, photo.photo_url)}
                                                         className="text-red-500 hover:text-red-700"
-                                                        disabled={isLoading}
+                                                        disabled={isLoading || editMode}
                                                     >
                                                         Delete
                                                     </button>
