@@ -1,12 +1,8 @@
 import Image from 'next/image'
 import { useState } from 'react';
-import CourseImage1 from '/public/images/CourseImage/CourseImage-1.jpg';
-import CourseImage2 from '/public/images/CourseImage/CourseImage-2.jpg';
-import CourseImage3 from '/public/images/CourseImage/CourseImage-3.jpg';
-import CourseImage4 from '/public/images/CourseImage/CourseImage-4.jpg';
-import CourseImage5 from '/public/images/CourseImage/CourseImage-5.jpg';
-import CourseImage6 from '/public/images/CourseImage/CourseImage-6.jpg';
-import CourseImage7 from '/public/images/CourseImage/CourseImage-7.jpg';
+import CourseImage01 from '/public/images/CourseImage/CourseImage-01.jpg';
+import CourseImage02 from '/public/images/CourseImage/CourseImage-02.jpg';
+import CourseImage03 from '/public/images/CourseImage/CourseImage-03.jpg';
 
 export default function CoursesSection() {
   const [activeFilter, setActiveFilter] = useState('all');
@@ -19,7 +15,7 @@ export default function CoursesSection() {
       duration: "1 Year",
       type: "kathak",
       description: "Basics of Kathak, including Teentaal, Tatkaar, Tihaais, rhythm patterns, and recitation techniques. Covers historical significance and key Kathak personalities.",
-      image: CourseImage1,
+      image: CourseImage01,
     },
     {
       title: "Praveshika Pratham",
@@ -27,7 +23,7 @@ export default function CoursesSection() {
       duration: "1 Year",
       type: "kathak",
       description: "Builds on basics with new Taals, hand gestures (Abhinav Darpan), and compositions like Rangmanch Pranam. Focus on Abhinay Geet and foundational performance elements.",
-      image: CourseImage2,
+      image: CourseImage02,
     },
     {
       title: "Praveshika Poorna",
@@ -35,7 +31,7 @@ export default function CoursesSection() {
       duration: "1 Year",
       type: "kathak",
       description: "Completes elementary training with advanced gestures, artist studies, and performances like Krishna Leela. Combines practical and theoretical exams.",
-      image: CourseImage3,
+      image: CourseImage03,
     },
     {
       title: "Madhyama Pratham",
@@ -43,7 +39,7 @@ export default function CoursesSection() {
       duration: "1 Year",
       type: "kathak",
       description: "Focuses on gestures, expressions, Gharanas, and iconic movements like Jhoomar. Includes biographies of legends like Pandit Bindadin Maharaj.",
-      image: CourseImage4,
+      image: CourseImage02,
     },
     {
       title: "Madhyama Poorna",
@@ -51,7 +47,7 @@ export default function CoursesSection() {
       duration: "1 Year",
       type: "kathak",
       description: "Emphasizes Shri Shiv Vandana, Taal recitation, and Hori performances, enhancing emotional expression and refining skills.",
-      image: CourseImage5,
+      image: CourseImage03,
     },
     {
       title: "Visharad Pratham",
@@ -59,7 +55,7 @@ export default function CoursesSection() {
       duration: "2 Years",
       type: "kathak",
       description: "Advanced training for concert-level performance, mastering expressions of Hindu deities like Vishnu. Prepares for professional dance.",
-      image: CourseImage6,
+      image: CourseImage01,
     },
     {
       title: "Visharad Poorna",
@@ -67,7 +63,7 @@ export default function CoursesSection() {
       duration: "2 Years",
       type: "kathak",
       description: "Final level focusing on the 9 Rasas, choreography, and stage performance. Graduates as accomplished Kathak professionals.",
-      image: CourseImage7,
+      image: CourseImage03,
     },
   ];
 
@@ -77,7 +73,7 @@ export default function CoursesSection() {
       duration: "6 Months",
       type: "semi-classical",
       description: "A beginner-friendly course covering basic moves and semi-classical dance techniques. Perfect for those new to dance and interested in modern classical fusion.",
-      image: CourseImage4,
+      image: CourseImage01,
     },
   ];
 
