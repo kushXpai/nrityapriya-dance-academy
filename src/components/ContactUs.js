@@ -48,6 +48,31 @@ export default function ContactUs() {
         });
     };
 
+    // Function to send email
+    const sendConfirmationEmail = async (userData) => {
+        try {
+            const response = await fetch('/api/send-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ...userData,
+                    mode: mode
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to send email');
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error("Error sending email:", error);
+            throw error;
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -63,6 +88,9 @@ export default function ContactUs() {
                 status: "underreview" // Explicitly set default
             });
 
+            // Send confirmation email
+            await sendConfirmationEmail(formData);
+
             // Reset form after successful submission
             setFormData({
                 name: "",
@@ -74,7 +102,7 @@ export default function ContactUs() {
                 status: "underreview"
             });
 
-            setSubmitMessage("Your inquiry has been submitted successfully!");
+            setSubmitMessage("Your inquiry has been submitted successfully! Please check your email for confirmation.");
             setMode("online");
         } catch (error) {
             console.error("Error submitting form:", error);
@@ -84,6 +112,8 @@ export default function ContactUs() {
         }
     };
 
+    // Rest of your component remains the same...
+    
     return (
         <section className="py-12 md:py-16 lg:py-20 bg-gradient-to-b from-gray-100 to-white" id="contact-us">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -167,6 +197,7 @@ export default function ContactUs() {
                                                     focus:outline-none focus:border-[#EE3224] focus:ring-2 focus:ring-[#EE3224] 
                                                     focus:ring-opacity-50 transition-all duration-300"
                                                 placeholder={`Enter your ${field}`}
+                                                required
                                             />
                                         </div>
                                     ))}
@@ -183,6 +214,7 @@ export default function ContactUs() {
                                             focus:outline-none focus:border-[#EE3224] focus:ring-2 focus:ring-[#EE3224] 
                                             focus:ring-opacity-50 transition-all duration-300"
                                         placeholder="Enter your address"
+                                        required
                                     />
                                 </div>
 
